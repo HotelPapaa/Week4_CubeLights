@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
+  m_Name: Stage_002_InvisibleSupport
+  m_EditorClassIdentifier: 
+  stageId: stage-002
+  displayName: "\uBCF4\uC774\uC9C0 \uC54A\uB294 \uBC1B\uCE68"
+  hint: "\uC720\uB9AC\uB294 \uC790\uB9AC\uB97C \uCC28\uC9C0\uD558\uC9C0\uB9CC \uADF8\uB9BC\uC790\uB97C
+    \uB9CC\uB4E4\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+  gridSize: {x: 4, y: 7}
+  projectionUsesDepthAxis: 1
+  cubeSpawns:
+  - prefab: {fileID: 7018710130116651528, guid: ade98b91507e0a047aae822ba33df866, type: 3}
+    localPosition: {x: 0.08, y: 0.1, z: -0.52}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 7018710130116651528, guid: ade98b91507e0a047aae822ba33df866, type: 3}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.52}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+  - prefab: {fileID: 5459698894375294561, guid: 460a406cde4216b46a380bbe850cec86, type: 3}
+    localPosition: {x: 0.59999996, y: 0.1, z: -0.52}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+  targetCells:
+  - column: 3
+    level: 1
+    color: {r: 0, g: 0, b: 0, a: 1}
+  - column: 4
+    level: 0
+    color: {r: 0, g: 0, b: 0, a: 1}
+  enableIce: 1
+  enableBrittle: 1
+  enableAdhesive: 1
+  enableColors: 1
