@@ -51,9 +51,22 @@ namespace GameLab.Week4.Editor
             new MaterialSpec("Glass", "M_Cube_Glass", new Color(0.55f, 0.94f, 0.95f, 0.27f), 0.05f, 0.94f, true),
             new MaterialSpec("ColoredGlass_Blue", "M_Cube_ColoredGlass_Blue", new Color(0.08f, 0.38f, 1f, 0.43f), 0.08f, 0.92f, true,
                 new Color(0f, 0.018f, 0.08f, 1f)),
+            new MaterialSpec("ColoredGlass_Red", "M_Cube_ColoredGlass_Red", new Color(1f, 0.1f, 0.07f, 0.43f), 0.08f, 0.92f, true,
+                new Color(0.09f, 0.004f, 0.002f, 1f)),
+            new MaterialSpec("ColoredGlass_Yellow", "M_Cube_ColoredGlass_Yellow", new Color(1f, 0.72f, 0.05f, 0.43f), 0.08f, 0.92f, true,
+                new Color(0.08f, 0.04f, 0.001f, 1f)),
             new MaterialSpec("Ice", "M_Cube_Ice", new Color(0.45f, 0.78f, 1f, 0.7f), 0f, 0.88f, true,
                 new Color(0.01f, 0.045f, 0.075f, 1f)),
-            new MaterialSpec("Styrofoam", "M_Cube_Styrofoam", new Color(0.94f, 0.92f, 0.82f, 1f), 0f, 0.08f)
+            new MaterialSpec("Styrofoam", "M_Cube_Styrofoam", new Color(0.94f, 0.92f, 0.82f, 1f), 0f, 0.08f),
+            new MaterialSpec("LightEmitter", "M_Cube_LightEmitter", new Color(0.72f, 0.84f, 1f, 1f), 0.1f, 0.72f,
+                emissionColor: new Color(0.12f, 0.18f, 0.24f, 1f)),
+            new MaterialSpec("Refractor", "M_Cube_Refractor", new Color(0.16f, 0.62f, 0.72f, 1f), 0.25f, 0.82f,
+                emissionColor: new Color(0.01f, 0.055f, 0.07f, 1f)),
+            // 표식 재질은 프리팹 몸체에 적용하지 않고 방향 화살표 자식에만 연결한다.
+            new MaterialSpec(null, "M_Marker_EmitterArrow", new Color(1f, 0.72f, 0.08f, 1f), 0f, 0.7f,
+                emissionColor: new Color(0.8f, 0.32f, 0.015f, 1f)),
+            new MaterialSpec(null, "M_Marker_RefractorArrow", new Color(1f, 0.08f, 0.72f, 1f), 0f, 0.68f,
+                emissionColor: new Color(0.55f, 0.015f, 0.3f, 1f))
         };
 
         [InitializeOnLoadMethod]
@@ -81,7 +94,10 @@ namespace GameLab.Week4.Editor
             foreach (MaterialSpec spec in Specs)
             {
                 Material material = CreateOrUpdateMaterial(shader, spec);
-                ApplyMaterialToPrefab(spec.PrefabName, material);
+                if (!string.IsNullOrEmpty(spec.PrefabName))
+                {
+                    ApplyMaterialToPrefab(spec.PrefabName, material);
+                }
             }
 
             AssetDatabase.SaveAssets();
@@ -166,8 +182,14 @@ namespace GameLab.Week4.Editor
             GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
             try
             {
+                Transform markerRoot = prefabRoot.transform.Find("OpticDirectionMarkers");
                 foreach (Renderer renderer in prefabRoot.GetComponentsInChildren<Renderer>(true))
                 {
+                    if (markerRoot != null && renderer.transform.IsChildOf(markerRoot))
+                    {
+                        continue;
+                    }
+
                     Material[] materials = renderer.sharedMaterials;
                     if (materials.Length == 0)
                     {

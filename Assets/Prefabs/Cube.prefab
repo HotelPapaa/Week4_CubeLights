@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 5266884479159103209}
   - component: {fileID: 1580457109774057938}
   - component: {fileID: 6263818292882509086}
+  - component: {fileID: 5190215966529312998}
+  - component: {fileID: 1992055492356576765}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -136,3 +138,37 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5190215966529312998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7018710130116651528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1c4312a1b6b33e449501b2522d252b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  board: {fileID: 0}
+  returnDuration: 0.28
+  rotationDuration: 0.14
+--- !u!114 &1992055492356576765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7018710130116651528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a878fdaf5163374bbd338db25539a57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cubeType: 0
+  shadowColor: {r: 1, g: 1, b: 1, a: 1}
+  iceMeltDelay: 1
+  lightColor: 0
+  emitterLocalDirection: {x: 0, y: 0, z: 1}
+  refractorPortALocal: {x: 0, y: 0, z: -1}
+  refractorPortBLocal: {x: 1, y: 0, z: 0}

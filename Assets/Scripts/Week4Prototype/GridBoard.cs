@@ -6,8 +6,8 @@ using UnityEngine;
 namespace GameLab.Week4
 {
     /// <summary>
-    /// 5x3 격자의 좌표 변환과 각 칸에 쌓인 큐브 목록을 관리한다.
-    /// width, depth, cellSize를 인스펙터에서 바꿀 수 있어 격자 크기를 확장할 수 있다.
+    /// 씬에 이미 배치된 격자의 좌표 변환과 각 칸에 쌓인 큐브 목록을 관리한다.
+    /// width, depth, cellSize는 SampleScene_Test의 기존 셀 마커에서 측정해 설정한다.
     /// </summary>
     public sealed class GridBoard : MonoBehaviour
     {
@@ -130,24 +130,6 @@ namespace GameLab.Week4
                 stacks.Add(cell, stack);
             }
 
-            // 새 큐브 바로 아래의 바사삭 큐브는 스티로폼이 올라온 경우를 제외하고 파괴된다.
-            if (stack.Count > 0)
-            {
-                DraggableCube supportCube = stack[stack.Count - 1];
-                PuzzleCubeProperties supportProperties = supportCube.GetComponent<PuzzleCubeProperties>();
-                PuzzleCubeProperties incomingProperties = cube.GetComponent<PuzzleCubeProperties>();
-                if (supportProperties != null && supportProperties.BreaksUnderWeight &&
-                    (incomingProperties == null || !incomingProperties.IsStyrofoam))
-                {
-                    supportProperties.Break();
-                    if (!stacks.TryGetValue(cell, out stack))
-                    {
-                        stack = new List<DraggableCube>();
-                        stacks.Add(cell, stack);
-                    }
-                }
-            }
-
             // 중복 등록을 막아 같은 큐브가 높이에 두 번 계산되지 않게 한다.
             if (!stack.Contains(cube))
             {
@@ -161,9 +143,19 @@ namespace GameLab.Week4
         /// <summary>이동을 시작한 큐브를 기존 스택에서 제거하고 위 큐브들을 내려 정렬한다.</summary>
         public void RemoveCube(DraggableCube cube, Vector2Int cell, bool animateCollapse = false)
         {
-            if (!stacks.TryGetValue(cell, out List<DraggableCube> stack) || !stack.Remove(cube))
+            if (!stacks.TryGetValue(cell, out List<DraggableCube> stack))
             {
                 return;
+            }
+
+            int removedIndex = stack.IndexOf(cube);
+            if (removedIndex < 0) return;
+            stack.RemoveAt(removedIndex);
+
+            // 바사삭 큐브는 단순히 위에 올려놓을 때가 아니라 받침이 사라져 큐브가 떨어질 때만 깨진다.
+            if (animateCollapse)
+            {
+                ResolveBrittleImpact(stack, removedIndex);
             }
 
             for (int index = 0; index < stack.Count; index++)
@@ -191,6 +183,25 @@ namespace GameLab.Week4
         public int GetHeight(Vector2Int cell)
         {
             return stacks.TryGetValue(cell, out List<DraggableCube> stack) ? stack.Count : 0;
+        }
+
+        /// <summary>격자 좌표와 층으로 큐브를 찾는다. 빈 공간이면 null을 반환한다.</summary>
+        public DraggableCube GetCubeAt(Vector3Int gridPosition)
+        {
+            Vector2Int cell = new(gridPosition.x, gridPosition.z);
+            if (!stacks.TryGetValue(cell, out List<DraggableCube> stack) ||
+                gridPosition.y < 0 || gridPosition.y >= stack.Count)
+            {
+                return null;
+            }
+
+            return stack[gridPosition.y];
+        }
+
+        /// <summary>전등과 광선 표시용으로 3차원 격자 중심을 월드 좌표로 변환한다.</summary>
+        public Vector3 GridToWorld(Vector3Int gridPosition)
+        {
+            return CellToWorld(new Vector2Int(gridPosition.x, gridPosition.z), gridPosition.y);
         }
 
         /// <summary>빛의 방향에서 같은 열을 보았을 때 나타나는 최대 실루엣 높이를 계산한다.</summary>
@@ -267,35 +278,64 @@ namespace GameLab.Week4
             return false;
         }
 
-        /// <summary>점등 후 1초 동안 얼음을 유지한 뒤 동시에 녹이고 완료 콜백을 호출한다.</summary>
-        public void ApplyLightEffects(Action onCompleted = null)
+        /// <summary>
+        /// 모든 발광 큐브에서 빛을 출발시켜 투과, 색 변환, 굴절, 전등의 정면 입사를 계산한다.
+        /// 실제 물리 Raycast 대신 정수 격자를 사용하므로 회전과 판정 결과가 항상 재현 가능하다.
+        /// </summary>
+        public LightSimulationResult SimulateLight(PuzzleStageDefinition stage)
         {
-            CancelLightEffects();
-            var placedCubes = new List<DraggableCube>();
-            foreach (List<DraggableCube> stack in stacks.Values)
+            var result = new LightSimulationResult();
+            if (stage != null)
             {
-                placedCubes.AddRange(stack);
-            }
-
-            var meltingCubes = new List<PuzzleCubeProperties>();
-            float delay = 0f;
-            foreach (DraggableCube cube in placedCubes)
-            {
-                if (cube != null && cube.TryGetComponent(out PuzzleCubeProperties properties) &&
-                    properties.MeltsInLight)
+                foreach (LampTarget lamp in stage.LampTargets)
                 {
-                    meltingCubes.Add(properties);
-                    delay = Mathf.Max(delay, properties.IceMeltDelay);
+                    result.Lamps.Add(new LampLightResult(lamp));
                 }
             }
 
-            if (meltingCubes.Count == 0)
+            int verticalLimit = GetMaximumStackHeight() + 3;
+            foreach (LampLightResult lamp in result.Lamps)
             {
-                onCompleted?.Invoke();
-                return;
+                verticalLimit = Mathf.Max(verticalLimit, lamp.Target.gridPosition.y + 2);
             }
 
-            lightEffectCoroutine = StartCoroutine(MeltIceAfterDelay(meltingCubes, delay, onCompleted));
+            foreach (KeyValuePair<Vector2Int, List<DraggableCube>> pair in stacks)
+            {
+                for (int level = 0; level < pair.Value.Count; level++)
+                {
+                    DraggableCube cube = pair.Value[level];
+                    if (cube == null || !cube.TryGetComponent(out PuzzleCubeProperties properties) ||
+                        !properties.EmitsLight)
+                    {
+                        continue;
+                    }
+
+                    Vector3Int origin = new(pair.Key.x, level, pair.Key.y);
+                    Vector3Int direction = properties.GetEmitterDirection(transform);
+                    TraceBeam(origin, direction, properties.LightColor, verticalLimit, result);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 점등 결과를 즉시 표시한 뒤 빛이 실제로 닿은 얼음만 1초 후 녹인다.
+        /// 얼음 뒤에 새 얼음이 드러나면 다시 한 번 기다리고 계산하는 연쇄 반응을 지원한다.
+        /// </summary>
+        public void ApplyLightEffects(
+            PuzzleStageDefinition stage,
+            Action<LightSimulationResult> onSimulationStep,
+            Action<LightSimulationResult> onCompleted)
+        {
+            CancelLightEffects();
+            lightEffectCoroutine = StartCoroutine(RunLightSequence(stage, onSimulationStep, onCompleted));
+        }
+
+        /// <summary>이전 씬 연결과의 호환을 유지하는 간단한 점등 진입점이다.</summary>
+        public void ApplyLightEffects(Action onCompleted = null)
+        {
+            ApplyLightEffects(null, null, _ => onCompleted?.Invoke());
         }
 
         public void CancelLightEffects()
@@ -306,26 +346,156 @@ namespace GameLab.Week4
             lightEffectCoroutine = null;
         }
 
-        private IEnumerator MeltIceAfterDelay(
-            List<PuzzleCubeProperties> meltingCubes,
-            float delay,
-            Action onCompleted)
+        private IEnumerator RunLightSequence(
+            PuzzleStageDefinition stage,
+            Action<LightSimulationResult> onSimulationStep,
+            Action<LightSimulationResult> onCompleted)
         {
-            if (delay > 0f)
+            LightSimulationResult result;
+            while (true)
             {
-                yield return new WaitForSeconds(delay);
-            }
+                result = SimulateLight(stage);
+                onSimulationStep?.Invoke(result);
+                if (result.IlluminatedIce.Count == 0) break;
 
-            foreach (PuzzleCubeProperties properties in meltingCubes)
-            {
-                if (properties != null && properties.gameObject.activeInHierarchy)
+                float delay = 0f;
+                foreach (PuzzleCubeProperties ice in result.IlluminatedIce)
                 {
-                    properties.ApplyLightEffectNow();
+                    if (ice != null && ice.MeltsInLight)
+                    {
+                        delay = Mathf.Max(delay, ice.IceMeltDelay);
+                    }
                 }
+
+                if (delay > 0f)
+                {
+                    yield return new WaitForSeconds(delay);
+                }
+
+                bool removedAnyIce = false;
+                foreach (PuzzleCubeProperties ice in result.IlluminatedIce)
+                {
+                    if (ice != null && ice.gameObject.activeInHierarchy && ice.MeltsInLight)
+                    {
+                        ice.ApplyLightEffectNow();
+                        removedAnyIce = true;
+                    }
+                }
+
+                if (!removedAnyIce) break;
+                yield return null;
             }
 
             lightEffectCoroutine = null;
-            onCompleted?.Invoke();
+            onCompleted?.Invoke(result);
+        }
+
+        private void TraceBeam(
+            Vector3Int origin,
+            Vector3Int initialDirection,
+            PuzzleLightColor initialColor,
+            int verticalLimit,
+            LightSimulationResult result)
+        {
+            if (initialDirection == Vector3Int.zero) return;
+
+            Vector3Int position = origin;
+            Vector3Int direction = initialDirection;
+            PuzzleLightColor color = initialColor;
+            var visited = new HashSet<string>();
+
+            // 보드 크기보다 넉넉한 제한과 방문 상태 검사를 함께 사용해 굴절 고리를 안전하게 끝낸다.
+            int maximumSteps = Mathf.Max(32, width * depth * Mathf.Max(1, verticalLimit) * 8);
+            for (int step = 0; step < maximumSteps; step++)
+            {
+                string state = $"{position.x},{position.y},{position.z}:{direction.x},{direction.y},{direction.z}:{(int)color}";
+                if (!visited.Add(state)) return;
+
+                Vector3Int next = position + direction;
+                result.Segments.Add(new LightBeamSegment(position, next, color));
+
+                bool reachedLamp = false;
+                foreach (LampLightResult lamp in result.Lamps)
+                {
+                    if (lamp.Target.gridPosition != next) continue;
+                    lamp.RegisterHit(direction, color);
+                    reachedLamp = true;
+                }
+
+                if (reachedLamp) return;
+                if (!IsLightCoordinateInsideBoard(next, verticalLimit)) return;
+
+                DraggableCube hitCube = GetCubeAt(next);
+                if (hitCube == null)
+                {
+                    position = next;
+                    continue;
+                }
+
+                PuzzleCubeProperties properties = hitCube.GetComponent<PuzzleCubeProperties>();
+                if (properties == null) return;
+
+                if (properties.MeltsInLight)
+                {
+                    result.IlluminatedIce.Add(properties);
+                    return;
+                }
+
+                if (properties.PassesLightStraight)
+                {
+                    if (properties.CubeType == PuzzleCubeType.ColoredGlass)
+                    {
+                        color = properties.LightColor;
+                    }
+
+                    position = next;
+                    continue;
+                }
+
+                if (properties.RefractsLight &&
+                    properties.TryGetRefractedDirection(direction, transform, out Vector3Int refractedDirection))
+                {
+                    position = next;
+                    direction = refractedDirection;
+                    continue;
+                }
+
+                // 일반, 바사삭, 스티로폼, 발광 큐브의 다른 면은 모두 빛을 차단한다.
+                return;
+            }
+        }
+
+        private void ResolveBrittleImpact(List<DraggableCube> stack, int fallingIndex)
+        {
+            while (fallingIndex > 0 && fallingIndex < stack.Count)
+            {
+                DraggableCube fallingCube = stack[fallingIndex];
+                DraggableCube supportCube = stack[fallingIndex - 1];
+                PuzzleCubeProperties fallingProperties = fallingCube != null
+                    ? fallingCube.GetComponent<PuzzleCubeProperties>()
+                    : null;
+                PuzzleCubeProperties supportProperties = supportCube != null
+                    ? supportCube.GetComponent<PuzzleCubeProperties>()
+                    : null;
+
+                if (supportProperties == null || !supportProperties.BreaksUnderWeight ||
+                    (fallingProperties != null && fallingProperties.IsStyrofoam))
+                {
+                    return;
+                }
+
+                // 떨어지는 큐브가 바사삭 큐브를 뚫고 다음 받침까지 내려갈 수 있도록 연속 충격을 계산한다.
+                stack.RemoveAt(fallingIndex - 1);
+                supportProperties.BreakAfterBoardDetach();
+                fallingIndex--;
+            }
+        }
+
+        private bool IsLightCoordinateInsideBoard(Vector3Int position, int verticalLimit)
+        {
+            return position.x >= 0 && position.x < width &&
+                   position.z >= 0 && position.z < depth &&
+                   position.y >= 0 && position.y < verticalLimit;
         }
 
         private bool IsInside(Vector2Int cell)

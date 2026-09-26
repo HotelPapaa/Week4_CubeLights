@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PuzzleCampaign
   m_EditorClassIdentifier: 
   stages:
-  - {fileID: 11400000, guid: 2884e83c962f49868fca0a0880a88d7c, type: 2}
-  - {fileID: 11400000, guid: 7bf29730bbf6471ba41c74a56c7c5d4f, type: 2}
-  - {fileID: 11400000, guid: b60fe3ea1aa14505871590f53bb0d266, type: 2}
-  - {fileID: 11400000, guid: ab91e1fd8ae741da94ef8fa1b6beaf97, type: 2}
-  - {fileID: 11400000, guid: 1c10c50ccec93c04bb3fb28c954ae9f4, type: 2}
+  - {fileID: 11400000, guid: c3011111111141118111111111111111, type: 2}
+  - {fileID: 11400000, guid: c3022222222242228222222222222222, type: 2}
+  - {fileID: 11400000, guid: c3033333333343338333333333333333, type: 2}
+  - {fileID: 11400000, guid: c3044444444444448444444444444444, type: 2}
+  - {fileID: 11400000, guid: 4b19c8afcb7b88f40a03f849825af76d, type: 2}

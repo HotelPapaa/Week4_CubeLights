@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 namespace GameLab.Week4
 {
     /// <summary>
-    /// Input System의 Player/TurnOnLight 액션을 받아 조명, 그림자, 카메라 전환을 한 번에 실행한다.
-    /// SpaceBar를 누를 때마다 조명 결과 화면과 큐브 조작 화면을 전환한다.
+    /// Input System의 Player/TurnOnLight 액션을 받아 전등 퍼즐 결과와 카메라를 전환한다.
+    /// 기존 Stage 스포트라이트와 그림자 모형은 사용하지 않는다.
     /// </summary>
     public sealed class LightingSequenceController : MonoBehaviour
     {
@@ -18,8 +18,6 @@ namespace GameLab.Week4
         [Header("연출 연결")]
         [SerializeField] private Camera playerCamera;
         [SerializeField] private Camera stageCamera;
-        [SerializeField] private Light projectionLight;
-        [SerializeField] private FakeShadowDisplay shadowDisplay;
         [SerializeField] private PrototypeGameManager gameManager;
 
         private InputAction turnOnLightAction;
@@ -33,15 +31,11 @@ namespace GameLab.Week4
             InputActionAsset actions,
             Camera player,
             Camera stage,
-            Light lightToEnable,
-            FakeShadowDisplay display,
             PrototypeGameManager manager)
         {
             inputActions = actions;
             playerCamera = player;
             stageCamera = stage;
-            projectionLight = lightToEnable;
-            shadowDisplay = display;
             gameManager = manager;
 
             if (isActiveAndEnabled)
@@ -94,8 +88,7 @@ namespace GameLab.Week4
         {
             isLightOn = false;
             SetCameraState(showStage: false);
-            if (projectionLight != null) projectionLight.enabled = false;
-            shadowDisplay?.SetProjectionVisible(false);
+            gameManager?.SetLightVisualizationVisible(false);
             gameManager?.SetInteractionEnabled(true);
         }
 
@@ -112,9 +105,9 @@ namespace GameLab.Week4
             isLightOn = true;
             gameManager?.SetInteractionEnabled(false);
 
-            // 먼저 결과 화면을 보여준 뒤 얼음의 용해 대기와 낙하를 Stage Camera에서 관찰하게 한다.
-            shadowDisplay?.SetProjectionVisible(true);
-            if (projectionLight != null) projectionLight.enabled = true;
+            // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
+            gameManager?.SetLightVisualizationVisible(true);
+            gameManager?.PrepareStageCamera(stageCamera);
             SetCameraState(showStage: true);
             LightStateChanged?.Invoke(true);
             if (gameManager != null)
@@ -132,8 +125,7 @@ namespace GameLab.Week4
             isLightOn = false;
             gameManager?.CancelLightEffects();
             SetCameraState(showStage: false);
-            if (projectionLight != null) projectionLight.enabled = false;
-            shadowDisplay?.SetProjectionVisible(false);
+            gameManager?.SetLightVisualizationVisible(false);
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
         }
@@ -144,8 +136,7 @@ namespace GameLab.Week4
             isLightOn = false;
             gameManager?.CancelLightEffects();
             SetCameraState(showStage: false);
-            if (projectionLight != null) projectionLight.enabled = false;
-            shadowDisplay?.SetProjectionVisible(false);
+            gameManager?.SetLightVisualizationVisible(false);
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
         }
@@ -154,7 +145,6 @@ namespace GameLab.Week4
         {
             if (!isLightOn) return;
 
-            shadowDisplay?.Refresh();
             LightEffectsResolved?.Invoke();
         }
 

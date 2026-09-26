@@ -11,17 +11,23 @@ namespace GameLab.Week4
         [SerializeField] private Camera playerCamera;
         [SerializeField] private int[] targetProjection = { 1, 2, 3, 2, 1 };
         [SerializeField] private bool showInstructionOverlay = true;
+        [SerializeField] private LightPuzzleVisualizer lightVisualizer;
 
         private DraggableCube selectedCube;
+        private PuzzleStageDefinition currentStage;
+        private LightSimulationResult lastLightResult;
         private bool isDragging;
         private bool hasWon;
         private bool interactionEnabled = true;
+
+        public bool IsCurrentStageSolved => hasWon;
+        public LightSimulationResult LastLightResult => lastLightResult;
 
         public void Initialize(GridBoard targetBoard, Camera targetCamera, int[] target)
         {
             if (board != null)
             {
-                board.BoardChanged -= EvaluateVictory;
+                board.BoardChanged -= InvalidateLightResult;
             }
 
             board = targetBoard;
@@ -30,9 +36,9 @@ namespace GameLab.Week4
 
             if (isActiveAndEnabled && board != null)
             {
-                board.BoardChanged -= EvaluateVictory;
-                board.BoardChanged += EvaluateVictory;
-                EvaluateVictory();
+                board.BoardChanged -= InvalidateLightResult;
+                board.BoardChanged += InvalidateLightResult;
+                InvalidateLightResult();
             }
         }
 
@@ -40,6 +46,36 @@ namespace GameLab.Week4
         public void SetInstructionOverlayVisible(bool visible)
         {
             showInstructionOverlay = visible;
+        }
+
+        /// <summary>StageManager가 새 전등 목표를 전달하고 표시 시스템을 같은 보드에 연결한다.</summary>
+        public void ConfigureStage(PuzzleStageDefinition stage)
+        {
+            currentStage = stage;
+            lastLightResult = null;
+            hasWon = false;
+
+            if (lightVisualizer == null)
+            {
+                lightVisualizer = GetComponent<LightPuzzleVisualizer>() ??
+                                  gameObject.AddComponent<LightPuzzleVisualizer>();
+            }
+
+            lightVisualizer.Initialize(board);
+            lightVisualizer.ConfigureStage(stage);
+            lightVisualizer.SetBeamsVisible(false);
+        }
+
+        /// <summary>스페이스바 전환 시 논리 광선 표시만 켜고 끈다.</summary>
+        public void SetLightVisualizationVisible(bool visible)
+        {
+            lightVisualizer?.SetBeamsVisible(visible);
+        }
+
+        /// <summary>점등 결과 화면에 들어가기 직전 Stage Camera를 5x3 전등판 정면으로 맞춘다.</summary>
+        public void PrepareStageCamera(Camera stageCamera)
+        {
+            lightVisualizer?.FocusStageCamera(stageCamera);
         }
 
         /// <summary>조명 연출이 시작되면 현재 배치를 확정하고 큐브 추가 조작을 잠근다.</summary>
@@ -54,12 +90,15 @@ namespace GameLab.Week4
             interactionEnabled = enabled;
         }
 
-        /// <summary>조명 점등 직전에 얼음처럼 빛에 반응하는 큐브 효과를 계산한다.</summary>
+        /// <summary>광선을 계산하고, 빛에 닿은 얼음의 지연 용해가 끝날 때까지 연쇄 반응을 실행한다.</summary>
         public void ApplyLightEffects(Action onCompleted = null)
         {
             if (board != null)
             {
-                board.ApplyLightEffects(onCompleted);
+                board.ApplyLightEffects(
+                    currentStage,
+                    HandleLightSimulationStep,
+                    _ => onCompleted?.Invoke());
             }
             else
             {
@@ -76,7 +115,7 @@ namespace GameLab.Week4
         {
             if (board != null)
             {
-                board.BoardChanged += EvaluateVictory;
+                board.BoardChanged += InvalidateLightResult;
             }
         }
 
@@ -84,7 +123,7 @@ namespace GameLab.Week4
         {
             if (board != null)
             {
-                board.BoardChanged -= EvaluateVictory;
+                board.BoardChanged -= InvalidateLightResult;
             }
         }
 
@@ -146,8 +185,8 @@ namespace GameLab.Week4
         }
 
         /// <summary>
-        /// 마우스로 큐브를 잡고 있는 동안 W/S는 화면 기준 앞뒤, A/D는 좌우로 90도 회전한다.
-        /// 카메라가 월드축과 비스듬해도 플레이어가 보는 방향과 입력 방향이 일치한다.
+        /// 마우스로 큐브를 잡고 있는 동안 W/S는 기존 화면 기준 앞뒤 회전을 유지하고,
+        /// A/D는 보드의 수직축을 중심으로 좌우(횡 방향) 90도 회전한다.
         /// </summary>
         private void HandleRotation()
         {
@@ -157,36 +196,31 @@ namespace GameLab.Week4
                 return;
             }
 
-            Vector3 cameraForward = Vector3.ProjectOnPlane(playerCamera.transform.forward, Vector3.up).normalized;
             Vector3 cameraRight = Vector3.ProjectOnPlane(playerCamera.transform.right, Vector3.up).normalized;
+            Vector3 boardUp = board != null ? board.transform.up : Vector3.up;
 
             // 카메라가 정확히 수직을 보는 예외에서도 회전축이 0이 되지 않게 월드축을 사용한다.
-            if (cameraForward.sqrMagnitude < 0.001f) cameraForward = Vector3.forward;
             if (cameraRight.sqrMagnitude < 0.001f) cameraRight = Vector3.right;
+            if (boardUp.sqrMagnitude < 0.001f) boardUp = Vector3.up;
 
             if (Keyboard.current.wKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, 90f);
             if (Keyboard.current.sKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, -90f);
-            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, 90f);
-            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, -90f);
+            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, -90f);
+            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, 90f);
         }
 
-        /// <summary>현재 투영 높이가 종이의 목표 모양과 같은지 검사한다.</summary>
-        private void EvaluateVictory()
+        /// <summary>배치를 바꾸면 이전 점등 결과를 무효화한다.</summary>
+        private void InvalidateLightResult()
         {
-            hasWon = board != null && targetProjection != null && targetProjection.Length == board.Width;
-            if (!hasWon)
-            {
-                return;
-            }
+            lastLightResult = null;
+            hasWon = false;
+        }
 
-            for (int column = 0; column < board.Width; column++)
-            {
-                if (board.GetProjectedHeight(column) != targetProjection[column])
-                {
-                    hasWon = false;
-                    break;
-                }
-            }
+        private void HandleLightSimulationStep(LightSimulationResult result)
+        {
+            lastLightResult = result;
+            hasWon = currentStage != null && currentStage.Matches(result);
+            lightVisualizer?.ShowResult(result);
         }
 
         /// <summary>프로토타입 조작법과 승리 상태를 별도 UI 애셋 없이 표시한다.</summary>
@@ -208,8 +242,8 @@ namespace GameLab.Week4
             labelStyle.normal.textColor = Color.white;
 
             string message = hasWon
-                ? "완성! 종이의 모양과 그림자가 일치합니다."
-                : "큐브: 마우스로 드래그 / 선택한 큐브 회전: W A S D\n목표 높이: 1 - 2 - 3 - 2 - 1";
+                ? "완성! 모든 전등에 올바른 빛이 정면으로 들어왔습니다."
+                : "큐브: 마우스로 드래그 / W·S: 앞뒤 회전 / A·D: 수평 회전\nSpace: 점등하고 전등 결과 확인";
             Rect panelRect = new Rect(20, 20, 500, 78);
 
             // 흰색 기본 텍스처에 색만 입혀 반투명 패널 배경을 그린다.

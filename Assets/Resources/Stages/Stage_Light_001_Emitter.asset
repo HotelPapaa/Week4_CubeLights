@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
+  m_Name: Stage_Light_001_Emitter
+  m_EditorClassIdentifier: 
+  stageId: light-001
+  displayName: "\uCCAB \uBC88\uC9F8 \uC804\uB4F1"
+  hint: "\uBC1C\uAD11 \uBA74\uC774 \uC804\uB4F1\uC744 \uD5A5\uD558\uB3C4\uB85D \uD050\uBE0C\uB97C
+    \uD68C\uC804\uD55C \uB4A4 Space\uB85C \uC810\uB4F1\uD558\uC138\uC694."
+  gridSize: {x: 3, y: 5}
+  cubeSpawns:
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 2, y: 2}
+  lampTargets:
+  - gridPosition: {x: -1, y: 0, z: 2}
+    frontDirection: 0
+    requiredColor: 0
+  projectionUsesDepthAxis: 1
+  targetCells: []
+  enableIce: 1
+  enableBrittle: 1
+  enableAdhesive: 1
+  enableColors: 1

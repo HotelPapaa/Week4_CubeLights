@@ -13,6 +13,8 @@ namespace GameLab.Week4
     {
         private const string TargetSceneName = "SampleScene_Test";
         private const string GameplayRootName = "Week4Gameplay";
+        private const int TargetGridWidth = 3;
+        private const int TargetGridDepth = 5;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InstallAfterSceneLoad()
@@ -34,24 +36,25 @@ namespace GameLab.Week4
             if (existingGameplay != null)
             {
                 GridBoard existingBoard = existingGameplay.GetComponentInChildren<GridBoard>();
-                Transform existingBlocksRoot = FindTransform(scene, "Blocks");
                 Transform existingCubes = FindTransform(scene, "Cubes");
-                Camera existingStageCamera = FindTransform(scene, "Stage Camera")?.GetComponent<Camera>();
+                if (existingBoard != null)
+                {
+                    existingBoard.Configure(
+                        TargetGridWidth,
+                        TargetGridDepth,
+                        existingBoard.CellSize,
+                        existingBoard.SurfaceY,
+                        existingBoard.CubeHeight);
+                    existingBoard.gameObject.name = "GridBoard_3x5";
+                    ConfigureGridLineLayout(gridLines, existingBoard);
+                }
+
                 if (existingBoard != null && existingCubes != null)
                 {
                     AddCubeControls(existingCubes, existingBoard);
                 }
 
-                if (existingBoard != null && existingBlocksRoot != null)
-                {
-                    BindExistingShadows(
-                        existingGameplay.gameObject,
-                        existingBoard,
-                        existingBlocksRoot,
-                        BuildTargetProjection(existingBoard.Width, existingCubes?.childCount ?? 0),
-                        existingStageCamera);
-                }
-
+                RemoveLegacyStageEffects(scene, existingGameplay.gameObject);
                 EnsureLightingSequence(scene, existingGameplay.gameObject);
                 EnsureStageSystem(scene, existingGameplay.gameObject);
                 return;
@@ -59,7 +62,6 @@ namespace GameLab.Week4
 
             Transform invisibleCells = FindTransform(scene, "Cubes_Invisible");
             Transform movableCubes = FindTransform(scene, "Cubes");
-            Transform existingBlocks = FindTransform(scene, "Blocks");
             Camera playerCamera = FindTransform(scene, "Player Camera")?.GetComponent<Camera>();
 
             if (invisibleCells == null || gridLines == null || movableCubes == null || playerCamera == null)
@@ -72,8 +74,8 @@ namespace GameLab.Week4
             List<Transform> markers = invisibleCells.Cast<Transform>().ToList();
             float cubeHeight = MeasureCubeHeight(movableCubes);
             Vector3 boardCenter = MeasureBoardCenter(markers, movableCubes, cubeHeight);
-            int width = CountDistinct(markers.Select(marker => marker.position.x));
-            int depth = CountDistinct(markers.Select(marker => marker.position.z));
+            int width = TargetGridWidth;
+            int depth = TargetGridDepth;
             float cellSize = MeasureCellSize(markers);
 
             GameObject boardObject = new GameObject($"GridBoard_{width}x{depth}");
@@ -82,6 +84,7 @@ namespace GameLab.Week4
             GridBoard board = boardObject.AddComponent<GridBoard>();
             board.Configure(width, depth, cellSize, 0f, cubeHeight);
 
+            ConfigureGridLineLayout(gridLines, board);
             StabilizeGridLines(gridLines);
             DisableMarkerPhysics(markers);
             AddCubeControls(movableCubes, board);
@@ -92,12 +95,7 @@ namespace GameLab.Week4
             manager.Initialize(board, playerCamera, target);
             manager.SetInstructionOverlayVisible(false);
 
-            if (existingBlocks != null)
-            {
-                Camera stageCamera = FindTransform(scene, "Stage Camera")?.GetComponent<Camera>();
-                BindExistingShadows(gameplayRoot, board, existingBlocks, target, stageCamera);
-            }
-
+            RemoveLegacyStageEffects(scene, gameplayRoot);
             EnsureLightingSequence(scene, gameplayRoot);
             EnsureStageSystem(scene, gameplayRoot);
 
@@ -109,13 +107,32 @@ namespace GameLab.Week4
         {
             Camera playerCamera = FindTransform(scene, "Player Camera")?.GetComponent<Camera>();
             Camera stageCamera = FindTransform(scene, "Stage Camera")?.GetComponent<Camera>();
-            Light spotLight = FindTransform(scene, "Spot Light")?.GetComponent<Light>();
-            FakeShadowDisplay shadowDisplay = gameplayRoot.GetComponent<FakeShadowDisplay>();
             PrototypeGameManager manager = gameplayRoot.GetComponent<PrototypeGameManager>();
 
             LightingSequenceController controller = gameplayRoot.GetComponent<LightingSequenceController>() ??
                                                     gameplayRoot.AddComponent<LightingSequenceController>();
-            controller.Initialize(null, playerCamera, stageCamera, spotLight, shadowDisplay, manager);
+            controller.Initialize(null, playerCamera, stageCamera, manager);
+        }
+
+        /// <summary>에디터 통합 전 상태로 실행해도 이전 Stage 조명과 그림자 모형을 남기지 않는다.</summary>
+        private static void RemoveLegacyStageEffects(Scene scene, GameObject gameplayRoot)
+        {
+            Transform spotLight = FindTransform(scene, "Spot Light");
+            if (spotLight != null)
+            {
+                Object.Destroy(spotLight.gameObject);
+            }
+
+            Transform shadowModels = FindTransform(scene, "Blocks");
+            if (shadowModels != null)
+            {
+                Object.Destroy(shadowModels.gameObject);
+            }
+
+            foreach (FakeShadowDisplay display in gameplayRoot.GetComponents<FakeShadowDisplay>())
+            {
+                Object.Destroy(display);
+            }
         }
 
         /// <summary>공용 씬에 데이터 기반 스테이지 로더를 연결한다. 캠페인은 Resources에서 자동 로드된다.</summary>
@@ -152,6 +169,53 @@ namespace GameLab.Week4
             }
         }
 
+        /// <summary>기존 선 오브젝트 10개를 3x5 격자로 재배치하고 남는 선은 숨긴다.</summary>
+        private static void ConfigureGridLineLayout(Transform gridLines, GridBoard board)
+        {
+            if (gridLines == null || board == null) return;
+
+            List<Transform> lines = gridLines.Cast<Transform>().ToList();
+            int horizontalLineCount = TargetGridDepth + 1;
+            int verticalLineCount = TargetGridWidth + 1;
+            int requiredLineCount = horizontalLineCount + verticalLineCount;
+            if (lines.Count < requiredLineCount) return;
+
+            float rootScale = Mathf.Max(0.0001f, Mathf.Abs(gridLines.lossyScale.x));
+            float localCellSize = board.CellSize / rootScale;
+            Vector3 localCenter = gridLines.InverseTransformPoint(board.transform.position);
+            float lineY = lines[0].localPosition.y;
+
+            for (int index = 0; index < lines.Count; index++)
+            {
+                Transform line = lines[index];
+                bool active = index < requiredLineCount;
+                line.gameObject.SetActive(active);
+                if (!active) continue;
+
+                float height = Mathf.Max(0.01f, Mathf.Abs(line.localScale.y));
+                if (index < horizontalLineCount)
+                {
+                    float z = localCenter.z - TargetGridDepth * localCellSize * 0.5f + index * localCellSize;
+                    line.localPosition = new Vector3(localCenter.x, lineY, z);
+                    line.localRotation = Quaternion.identity;
+                    line.localScale = new Vector3(TargetGridWidth * localCellSize, height, 0.01f);
+                }
+                else
+                {
+                    int column = index - horizontalLineCount;
+                    float x = localCenter.x - TargetGridWidth * localCellSize * 0.5f + column * localCellSize;
+                    line.localPosition = new Vector3(x, lineY, localCenter.z);
+                    line.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                    line.localScale = new Vector3(TargetGridDepth * localCellSize, height, 0.01f);
+                }
+
+                foreach (Renderer renderer in line.GetComponentsInChildren<Renderer>(true))
+                {
+                    renderer.enabled = true;
+                }
+            }
+        }
+
         private static void DisableMarkerPhysics(List<Transform> markers)
         {
             foreach (Transform marker in markers)
@@ -180,7 +244,8 @@ namespace GameLab.Week4
                 if (!cubeTransform.TryGetComponent(out PuzzleCubeProperties _))
                 {
                     PuzzleCubeProperties properties = cubeTransform.gameObject.AddComponent<PuzzleCubeProperties>();
-                    properties.Configure(InferCubeType(cubeTransform.name));
+                    PuzzleCubeType type = InferCubeType(cubeTransform.name);
+                    properties.ConfigureOptics(type, InferLightColor(cubeTransform.name, type));
                 }
             }
         }
@@ -188,11 +253,23 @@ namespace GameLab.Week4
         private static PuzzleCubeType InferCubeType(string objectName)
         {
             string normalized = objectName.ToLowerInvariant();
+            if (normalized.Contains("emitter") || normalized.Contains("발광")) return PuzzleCubeType.LightEmitter;
+            if (normalized.Contains("refractor") || normalized.Contains("굴절")) return PuzzleCubeType.Refractor;
+            if (normalized.Contains("coloredglass") || normalized.Contains("색유리")) return PuzzleCubeType.ColoredGlass;
             if (normalized.Contains("glass") || normalized.Contains("유리")) return PuzzleCubeType.Glass;
             if (normalized.Contains("ice") || normalized.Contains("얼음")) return PuzzleCubeType.Ice;
             if (normalized.Contains("brittle") || normalized.Contains("바사삭")) return PuzzleCubeType.Brittle;
             if (normalized.Contains("styrofoam") || normalized.Contains("스티로폼")) return PuzzleCubeType.Styrofoam;
             return PuzzleCubeType.Normal;
+        }
+
+        private static PuzzleLightColor InferLightColor(string objectName, PuzzleCubeType type)
+        {
+            if (type != PuzzleCubeType.ColoredGlass) return PuzzleLightColor.White;
+            string normalized = objectName.ToLowerInvariant();
+            if (normalized.Contains("red") || normalized.Contains("빨강")) return PuzzleLightColor.Red;
+            if (normalized.Contains("yellow") || normalized.Contains("노랑")) return PuzzleLightColor.Yellow;
+            return PuzzleLightColor.Blue;
         }
 
         private static void ConfigureCameras(Scene scene, Camera playerCamera)
@@ -209,25 +286,6 @@ namespace GameLab.Week4
                     if (listener != null) listener.enabled = isPlayer;
                 }
             }
-        }
-
-        private static void BindExistingShadows(
-            GameObject gameplayRoot,
-            GridBoard board,
-            Transform blocksRoot,
-            int[] targetProjection,
-            Camera stageCamera)
-        {
-            List<GameObject> pieces = blocksRoot.Cast<Transform>()
-                .OrderBy(child => child.position.y)
-                .ThenBy(child => child.position.z)
-                .Select(child => child.gameObject)
-                .ToList();
-
-            FakeShadowDisplay display = gameplayRoot.GetComponent<FakeShadowDisplay>() ??
-                                        gameplayRoot.AddComponent<FakeShadowDisplay>();
-            display.InitializeCompositePattern(board, pieces, targetProjection, stageCamera);
-            display.SetProjectionVisible(false);
         }
 
         private static int[] BuildTargetProjection(int width, int cubeCount)

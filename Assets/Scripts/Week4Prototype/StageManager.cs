@@ -108,12 +108,17 @@ namespace GameLab.Week4
             gameManager?.SetInteractionEnabled(false);
             ClearRuntimeCubes();
             board.ResetBoard();
-            board.Configure(
-                currentStage.GridSize.x,
-                currentStage.GridSize.y,
-                board.CellSize,
-                board.SurfaceY,
-                board.CubeHeight);
+
+            // SampleScene_Test에서 측정해 둔 기존 GridLines/Cubes_Invisible의 크기를 그대로 사용한다.
+            // 스테이지 데이터가 논리 보드를 재설정하면 기존 검은 격자와 스냅 위치가 어긋나므로 변경하지 않는다.
+            if (currentStage.GridSize.x != board.Width || currentStage.GridSize.y != board.Depth)
+            {
+                Debug.LogWarning(
+                    $"{currentStage.DisplayName}: 스테이지 데이터 {currentStage.GridSize.x}x{currentStage.GridSize.y} 대신 " +
+                    $"씬의 기존 격자 {board.Width}x{board.Depth}를 사용합니다.",
+                    this);
+            }
+            gameManager?.ConfigureStage(currentStage);
 
             EnsureRuntimeRoot();
             foreach (StageCubeSpawn spawn in currentStage.CubeSpawns)
@@ -129,6 +134,10 @@ namespace GameLab.Week4
                 DraggableCube cube = cubeObject.GetComponent<DraggableCube>() ??
                                      cubeObject.AddComponent<DraggableCube>();
                 cube.Initialize(board);
+                if (spawn.startsOnBoard)
+                {
+                    cube.PlaceAtStageStart(spawn.boardCell);
+                }
             }
 
             stageSolved = false;
@@ -158,7 +167,7 @@ namespace GameLab.Week4
         {
             if (currentStage == null || board == null) return;
 
-            stageSolved = currentStage.Matches(board);
+            stageSolved = gameManager != null && gameManager.IsCurrentStageSolved;
             if (stageSolved)
             {
                 int highestCompleted = PlayerPrefs.GetInt(ProgressKey, -1);
@@ -220,9 +229,9 @@ namespace GameLab.Week4
             GUILayout.Label($"STAGE {currentStageIndex + 1} / {campaign.StageCount}");
             GUILayout.Label(currentStage.DisplayName);
             GUILayout.Space(4f);
-            GUILayout.Label($"목표 그림자\n{currentStage.BuildTargetPreview()}");
+            GUILayout.Label($"목표 전등\n{currentStage.BuildTargetPreview()}");
             if (!string.IsNullOrWhiteSpace(currentStage.Hint)) GUILayout.Label(currentStage.Hint);
-            if (stageSolved) GUILayout.Label("완성! 목표 그림자와 일치합니다.");
+            if (stageSolved) GUILayout.Label("완성! 모든 전등이 올바르게 켜졌습니다.");
             GUILayout.FlexibleSpace();
 
             GUILayout.BeginHorizontal();

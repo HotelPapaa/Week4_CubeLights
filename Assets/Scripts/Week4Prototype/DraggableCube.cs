@@ -44,6 +44,19 @@ namespace GameLab.Week4
             }
         }
 
+        /// <summary>스테이지 데이터가 지정한 시작 칸에 큐브를 즉시 배치한다.</summary>
+        public void PlaceAtStageStart(Vector2Int cell)
+        {
+            ResolveBoardReference();
+            if (board == null) return;
+
+            Cell = cell;
+            IsPlaced = true;
+            SnapImmediately(board.PlaceCube(this, cell));
+            // 격자 밖으로 꺼냈을 때 돌아갈 원위치도 이번 스테이지의 초기 배치로 갱신한다.
+            gameStartPosition = transform.position;
+        }
+
         /// <summary>드래그 시작 위치를 저장하고 기존 스택에서 잠시 제외한다.</summary>
         public void BeginDrag()
         {
@@ -58,7 +71,8 @@ namespace GameLab.Week4
 
             if (IsPlaced && board != null)
             {
-                board.RemoveCube(this, Cell);
+                // 중간 받침을 빼면 위 큐브들이 실제로 떨어진 것으로 처리해 바사삭 충격 규칙도 적용한다.
+                board.RemoveCube(this, Cell, animateCollapse: true);
                 IsPlaced = false;
             }
         }

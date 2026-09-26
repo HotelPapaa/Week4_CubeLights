@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
+  m_Name: Stage_Light_005_Test
+  m_EditorClassIdentifier: 
+  stageId: light-005
+  displayName: TestPlace
+  hint: 
+  gridSize: {x: 3, y: 5}
+  cubeSpawns:
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 2, y: 2}
+  - prefab: {fileID: 6189360690847491035, guid: 8fa13a289d138034da11bd41df06e472, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 1, y: 2}
+  - prefab: {fileID: 5915378231970421721, guid: e721c23e26147fc4fa5e88ebc4a865a0, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 1, y: 2}
+  - prefab: {fileID: 7018710130116651528, guid: ade98b91507e0a047aae822ba33df866, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 1, y: 2}
+  lampTargets:
+  - gridPosition: {x: -1, y: 0, z: 2}
+    frontDirection: 0
+    requiredColor: 0
+  projectionUsesDepthAxis: 1
+  targetCells: []
+  enableIce: 1
+  enableBrittle: 1
+  enableAdhesive: 1
+  enableColors: 1

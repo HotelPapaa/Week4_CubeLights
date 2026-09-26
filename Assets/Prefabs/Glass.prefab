@@ -168,3 +168,7 @@ MonoBehaviour:
   cubeType: 2
   shadowColor: {r: 1, g: 1, b: 1, a: 1}
   iceMeltDelay: 1
+  lightColor: 0
+  emitterLocalDirection: {x: 0, y: 0, z: 1}
+  refractorPortALocal: {x: 0, y: 0, z: -1}
+  refractorPortBLocal: {x: 1, y: 0, z: 0}
