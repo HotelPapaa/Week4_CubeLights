@@ -1149,6 +1149,7 @@ MonoBehaviour:
   board: {fileID: 0}
   returnDuration: 0.28
   rotationDuration: 0.14
+  interactionLocked: 0
 --- !u!114 &9110000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1168,6 +1169,9 @@ MonoBehaviour:
   emitterLocalDirection: {x: -1, y: 0, z: 0}
   refractorPortALocal: {x: 0, y: 0, z: -1}
   refractorPortBLocal: {x: 1, y: 0, z: 0}
+  splitterInputLocal: {x: 1, y: 0, z: 0}
+  splitterOutputALocal: {x: -1, y: 0, z: 0}
+  splitterOutputBLocal: {x: 0, y: 0, z: 1}
 --- !u!1 &7360539273824907831
 GameObject:
   m_ObjectHideFlags: 0
