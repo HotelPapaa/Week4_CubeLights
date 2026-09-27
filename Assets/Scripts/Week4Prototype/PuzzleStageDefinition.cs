@@ -5,7 +5,16 @@ using UnityEngine;
 
 namespace GameLab.Week4
 {
-    /// <summary>스테이지 시작 시 생성할 큐브 프리팹과 보관대 기준 위치다.</summary>
+    /// <summary>격자 바깥 대기 큐브를 놓을 네 방향이다.</summary>
+    public enum CubeReserveSide
+    {
+        Left,
+        Right,
+        Near,
+        Far
+    }
+
+    /// <summary>스테이지 시작 시 생성할 큐브 프리팹과 격자 안팎의 초기 위치다.</summary>
     [Serializable]
     public struct StageCubeSpawn
     {
@@ -14,6 +23,11 @@ namespace GameLab.Week4
         public Vector3 localEulerAngles;
         public bool startsOnBoard;
         public Vector2Int boardCell;
+        [Tooltip("켜면 localPosition 대신 격자 외곽 대기 슬롯을 사용합니다.")]
+        public bool usesReserveSlot;
+        public CubeReserveSide reserveSide;
+        [Tooltip("1부터 시작합니다. Left/Right는 1~3, Near/Far는 1~5입니다.")]
+        [Min(1)] public int reserveSlot;
 
         public StageCubeSpawn(GameObject cubePrefab, Vector3 position, Vector3 eulerAngles)
         {
@@ -22,6 +36,9 @@ namespace GameLab.Week4
             localEulerAngles = eulerAngles;
             startsOnBoard = false;
             boardCell = default;
+            usesReserveSlot = false;
+            reserveSide = CubeReserveSide.Near;
+            reserveSlot = 1;
         }
 
         public StageCubeSpawn(GameObject cubePrefab, Vector2Int initialBoardCell, Vector3 eulerAngles)
@@ -31,6 +48,25 @@ namespace GameLab.Week4
             localEulerAngles = eulerAngles;
             startsOnBoard = true;
             boardCell = initialBoardCell;
+            usesReserveSlot = false;
+            reserveSide = CubeReserveSide.Near;
+            reserveSlot = 1;
+        }
+
+        public StageCubeSpawn(
+            GameObject cubePrefab,
+            CubeReserveSide side,
+            int slot,
+            Vector3 eulerAngles)
+        {
+            prefab = cubePrefab;
+            localPosition = Vector3.zero;
+            localEulerAngles = eulerAngles;
+            startsOnBoard = false;
+            boardCell = default;
+            usesReserveSlot = true;
+            reserveSide = side;
+            reserveSlot = Mathf.Max(1, slot);
         }
     }
 

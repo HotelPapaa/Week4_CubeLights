@@ -17,7 +17,8 @@ namespace GameLab.Week4
         Styrofoam,
         Ice,
         LightEmitter,
-        Refractor
+        Refractor,
+        LightSplitter
     }
 
     /// <summary>큐브의 재질별 퍼즐 성질을 보관하고 파괴·용해 상태를 관리한다.</summary>
@@ -40,6 +41,12 @@ namespace GameLab.Week4
         [SerializeField] private Vector3Int refractorPortALocal = new(0, 0, -1);
         [Tooltip("굴절 큐브의 두 번째 구멍이 바라보는 로컬 방향")]
         [SerializeField] private Vector3Int refractorPortBLocal = new(1, 0, 0);
+        [Tooltip("빛 분기 큐브가 빛을 받는 로컬 입력 면")]
+        [SerializeField] private Vector3Int splitterInputLocal = new(1, 0, 0);
+        [Tooltip("빛 분기 큐브의 첫 번째 로컬 출력 방향")]
+        [SerializeField] private Vector3Int splitterOutputALocal = new(0, 0, -1);
+        [Tooltip("빛 분기 큐브의 두 번째 로컬 출력 방향")]
+        [SerializeField] private Vector3Int splitterOutputBLocal = new(0, 0, 1);
 
         private DraggableCube draggableCube;
         private bool removedByRule;
@@ -55,6 +62,7 @@ namespace GameLab.Week4
         public float IceMeltDelay => iceMeltDelay;
         public bool EmitsLight => cubeType == PuzzleCubeType.LightEmitter && !removedByRule;
         public bool RefractsLight => cubeType == PuzzleCubeType.Refractor && !removedByRule;
+        public bool SplitsLight => cubeType == PuzzleCubeType.LightSplitter && !removedByRule;
         public bool PassesLightStraight => !removedByRule &&
                                            (cubeType == PuzzleCubeType.Glass ||
                                             cubeType == PuzzleCubeType.ColoredGlass);
@@ -63,7 +71,6 @@ namespace GameLab.Week4
         private void Awake()
         {
             draggableCube = GetComponent<DraggableCube>();
-            EnsureOpticMarker();
         }
 
         /// <summary>씬 통합기가 이름으로 추론한 초기 타입을 적용한다.</summary>
@@ -125,6 +132,27 @@ namespace GameLab.Week4
             return false;
         }
 
+        /// <summary>
+        /// 지정된 입력 면으로 빛이 들어오면 같은 색의 빛을 두 출력 방향으로 복제한다.
+        /// 입력 면이 아닌 곳에 닿은 빛은 분기되지 않고 차단된다.
+        /// </summary>
+        public bool TryGetSplitDirections(
+            Vector3Int incomingTravelDirection,
+            Transform boardTransform,
+            out Vector3Int outputA,
+            out Vector3Int outputB)
+        {
+            Vector3Int inputFace = TransformLocalDirection(splitterInputLocal, boardTransform);
+            Vector3Int entryFace = -incomingTravelDirection;
+            outputA = TransformLocalDirection(splitterOutputALocal, boardTransform);
+            outputB = TransformLocalDirection(splitterOutputBLocal, boardTransform);
+
+            return entryFace == inputFace &&
+                   outputA != Vector3Int.zero &&
+                   outputB != Vector3Int.zero &&
+                   outputA != outputB;
+        }
+
         /// <summary>바사삭 큐브를 격자에서 제거하고 시각 오브젝트도 숨긴다.</summary>
         public void Break()
         {
@@ -174,50 +202,49 @@ namespace GameLab.Week4
         /// <summary>프리팹에 표식이 없는 이전 애셋도 Play 중에는 방향 표식을 자동으로 보완한다.</summary>
         private void EnsureOpticMarker()
         {
-            if (cubeType != PuzzleCubeType.LightEmitter && cubeType != PuzzleCubeType.Refractor) return;
+            // Refractor는 프리팹에 직접 제작된 화살표와 굴절 경로 모델을 그대로 사용한다.
+            // 런타임 도형을 덧붙이면 저작된 외형이 달라지므로 Emitter만 자동 보완한다.
+            if (cubeType != PuzzleCubeType.LightEmitter) return;
             if (transform.Find(MarkerRootName) != null || transform.Find(LegacyMarkerRootName) != null) return;
 
-            RebuildOpticMarkers(null, null);
+            RebuildEmitterMarkers(null);
         }
 
         /// <summary>
-        /// 발광 큐브는 금색 단방향 화살표, 굴절 큐브는 자홍색 양방향 포트와 L자 경로로 다시 만든다.
-        /// Editor 생성기는 영구 재질을 전달해 이 결과를 프리팹 자체에 저장한다.
+        /// 발광 큐브의 금색 방향 표식만 다시 만든다.
+        /// Refractor의 외형은 수동 제작된 프리팹을 그대로 사용하므로 이 경로에서 변경하지 않는다.
         /// </summary>
-        public void RebuildOpticMarkers(Material emitterMarkerMaterial, Material refractorMarkerMaterial)
+        public void RebuildEmitterMarkers(Material emitterMarkerMaterial)
         {
             RemoveMarkerRoot(MarkerRootName);
             RemoveMarkerRoot(LegacyMarkerRootName);
-            if (cubeType != PuzzleCubeType.LightEmitter && cubeType != PuzzleCubeType.Refractor) return;
+            if (cubeType != PuzzleCubeType.LightEmitter) return;
 
             GameObject root = new(MarkerRootName);
             root.transform.SetParent(transform, false);
 
-            if (cubeType == PuzzleCubeType.LightEmitter)
-            {
-                Material material = emitterMarkerMaterial != null
-                    ? emitterMarkerMaterial
-                    : CreateRuntimeMarkerMaterial(new Color(1f, 0.72f, 0.08f));
-                CreateFaceArrow(root.transform, emitterLocalDirection, material, false, "Emitter_Output");
+            Material material = emitterMarkerMaterial != null
+                ? emitterMarkerMaterial
+                : CreateRuntimeMarkerMaterial(new Color(1f, 0.72f, 0.08f));
+            CreateFaceArrow(root.transform, emitterLocalDirection, material, false, "Emitter_Output");
 
-                // 기본 발광 방향이 수평일 때 위·아래 면에도 같은 방향 화살표를 넣어
-                // 발광 면이 카메라 반대편에 있어도 방향을 읽을 수 있게 한다.
-                if (emitterLocalDirection.y == 0)
-                {
-                    CreateSurfaceDirectionArrow(root.transform, Vector3Int.up, emitterLocalDirection, material, "Emitter_TopGuide");
-                    CreateSurfaceDirectionArrow(root.transform, Vector3Int.down, emitterLocalDirection, material, "Emitter_BottomGuide");
-                }
-            }
-            else
+            // 기본 발광 방향이 수평일 때 위·아래 면에도 같은 방향 화살표를 넣어
+            // 발광 면이 카메라 반대편에 있어도 방향을 읽을 수 있게 한다.
+            if (emitterLocalDirection.y == 0)
             {
-                Material material = refractorMarkerMaterial != null
-                    ? refractorMarkerMaterial
-                    : CreateRuntimeMarkerMaterial(new Color(1f, 0.08f, 0.72f));
-                CreateFaceArrow(root.transform, refractorPortALocal, material, true, "Refractor_Port_A");
-                CreateFaceArrow(root.transform, refractorPortBLocal, material, true, "Refractor_Port_B");
-                CreateCornerDiagram(root.transform, Vector3Int.up, material, "Refractor_Top_L");
-                CreateCornerDiagram(root.transform, Vector3Int.down, material, "Refractor_Bottom_L");
+                CreateSurfaceDirectionArrow(root.transform, Vector3Int.up, emitterLocalDirection, material, "Emitter_TopGuide");
+                CreateSurfaceDirectionArrow(root.transform, Vector3Int.down, emitterLocalDirection, material, "Emitter_BottomGuide");
             }
+        }
+
+        /// <summary>새 빛 분기 프리팹의 T자형 입력·출력 방향을 최초 한 번 설정한다.</summary>
+        public void ConfigureSplitterDefaults()
+        {
+            cubeType = PuzzleCubeType.LightSplitter;
+            lightColor = PuzzleLightColor.White;
+            splitterInputLocal = Vector3Int.right;
+            splitterOutputALocal = new Vector3Int(0, 0, -1);
+            splitterOutputBLocal = new Vector3Int(0, 0, 1);
         }
 
         private void RemoveMarkerRoot(string rootName)

@@ -15,6 +15,11 @@ namespace GameLab.Week4
 
         [SerializeField] private GridBoard board;
         [Min(0.01f)] [SerializeField] private float beamWidthRatio = 0.08f;
+        [Header("목표 스테이지 위치")]
+        [Tooltip("보드 로컬 축 기준 오프셋입니다. X: 앞/뒤, Y: 높이, Z: 좌/우")]
+        [SerializeField] private Vector3 panelPositionOffset;
+        [SerializeField] private Material panelCellMaterial;
+        [SerializeField] private Material lampOffMaterial;
 
         private readonly List<LineRenderer> beamLines = new();
         private readonly List<Renderer> lampRenderers = new();
@@ -29,6 +34,20 @@ namespace GameLab.Week4
         {
             board = targetBoard;
             EnsureRoots();
+        }
+
+        /// <summary>에디터에서 저장한 전등판 재질을 연결해 씬 뷰에서도 같은 외형을 유지한다.</summary>
+        public void ConfigureMaterials(Material cellMaterial, Material offMaterial)
+        {
+            panelCellMaterial = cellMaterial;
+            lampOffMaterial = offMaterial;
+        }
+
+        private void OnValidate()
+        {
+            if (Application.isPlaying || board == null) return;
+            CacheExistingPanelRoots();
+            RefreshExistingPanelPositions();
         }
 
         /// <summary>Space 결과 화면에 표시할 5x3 배경 셀과 목표 전등을 다시 만든다.</summary>
@@ -74,11 +93,18 @@ namespace GameLab.Week4
                 if (lampObject.TryGetComponent(out Collider lampCollider)) Destroy(lampCollider);
 
                 Renderer renderer = lampObject.GetComponent<Renderer>();
-                renderer.material = CreateDisplayMaterial(GetDimColor(lamp.requiredColor));
+                renderer.sharedMaterial = lampOffMaterial != null
+                    ? lampOffMaterial
+                    : CreateDisplayMaterial(GetDimColor(lamp.requiredColor));
+                if (Application.isPlaying)
+                {
+                    SetMaterialColor(renderer.material, GetDimColor(lamp.requiredColor));
+                }
                 lampRenderers.Add(renderer);
             }
 
-            panelRoot.gameObject.SetActive(beamsVisible);
+            // 목표 스테이지는 편집 중과 플레이 중 모두 보이고, 광선만 Space로 전환한다.
+            panelRoot.gameObject.SetActive(true);
         }
 
         /// <summary>현재 광선 경로와 각 전등의 성공·오입사 상태를 갱신한다.</summary>
@@ -123,15 +149,15 @@ namespace GameLab.Week4
             beamRoot.gameObject.SetActive(beamsVisible);
         }
 
-        /// <summary>스페이스바 결과 화면에서만 광선과 5x3 전등판을 보이게 한다.</summary>
+        /// <summary>스페이스바 결과 화면에서는 광선만 켜고 끈다. 목표 전등판은 항상 보인다.</summary>
         public void SetBeamsVisible(bool visible)
         {
             beamsVisible = visible;
             EnsureRoots();
             beamRoot.gameObject.SetActive(visible);
-            panelRoot.gameObject.SetActive(visible);
+            panelRoot.gameObject.SetActive(true);
 
-            if (!visible && stage != null)
+            if (!visible && stage != null && Application.isPlaying)
             {
                 for (int index = 0; index < lampRenderers.Count && index < stage.LampTargets.Count; index++)
                 {
@@ -177,24 +203,93 @@ namespace GameLab.Week4
 
             if (panelRoot == null)
             {
-                GameObject root = new("RuntimeLampPanel5x3");
-                root.transform.SetParent(transform, false);
-                panelRoot = root.transform;
-                panelRoot.gameObject.SetActive(beamsVisible);
+                panelRoot = transform.Find("LightTargetStage_5x3") ??
+                            transform.Find("RuntimeLampPanel5x3");
+                if (panelRoot == null)
+                {
+                    GameObject root = new("LightTargetStage_5x3");
+                    root.transform.SetParent(transform, false);
+                    panelRoot = root.transform;
+                }
+
+                panelRoot.name = "LightTargetStage_5x3";
+                panelRoot.gameObject.SetActive(true);
             }
 
             if (cellRoot == null)
             {
-                GameObject root = new("Cells");
-                root.transform.SetParent(panelRoot, false);
-                cellRoot = root.transform;
+                cellRoot = panelRoot.Find("Cells");
+                if (cellRoot == null)
+                {
+                    GameObject root = new("Cells");
+                    root.transform.SetParent(panelRoot, false);
+                    cellRoot = root.transform;
+                }
             }
 
             if (lampRoot == null)
             {
-                GameObject root = new("Lamps");
-                root.transform.SetParent(panelRoot, false);
-                lampRoot = root.transform;
+                lampRoot = panelRoot.Find("Lamps");
+                if (lampRoot == null)
+                {
+                    GameObject root = new("Lamps");
+                    root.transform.SetParent(panelRoot, false);
+                    lampRoot = root.transform;
+                }
+            }
+        }
+
+        private void CacheExistingPanelRoots()
+        {
+            if (panelRoot == null)
+            {
+                panelRoot = transform.Find("LightTargetStage_5x3") ??
+                            transform.Find("RuntimeLampPanel5x3");
+            }
+
+            if (panelRoot == null) return;
+            if (cellRoot == null) cellRoot = panelRoot.Find("Cells");
+            if (lampRoot == null) lampRoot = panelRoot.Find("Lamps");
+        }
+
+        /// <summary>Inspector의 위치 오프셋이 바뀌면 저장된 프리뷰 도형만 즉시 재배치한다.</summary>
+        private void RefreshExistingPanelPositions()
+        {
+            if (cellRoot != null)
+            {
+                foreach (Transform cell in cellRoot)
+                {
+                    string[] parts = cell.name.Split('_');
+                    if (parts.Length != 3 ||
+                        !int.TryParse(parts[1], out int column) ||
+                        !int.TryParse(parts[2], out int row))
+                    {
+                        continue;
+                    }
+
+                    cell.position = GetPanelCellPosition(column, row);
+                }
+            }
+
+            if (lampRoot != null)
+            {
+                foreach (Transform lamp in lampRoot)
+                {
+                    string[] parts = lamp.name.Split('_');
+                    if (parts.Length != 4 ||
+                        !int.TryParse(parts[1], out int gridX) ||
+                        !int.TryParse(parts[2], out int gridY) ||
+                        !int.TryParse(parts[3], out int gridZ))
+                    {
+                        continue;
+                    }
+
+                    var gridPosition = new Vector3Int(gridX, gridY, gridZ);
+                    int panelColumn = GetPanelColumn(gridPosition);
+                    if (panelColumn < 0 || panelColumn >= PanelColumns) continue;
+                    lamp.position = GetPanelCellPosition(panelColumn, gridY) +
+                                    board.transform.right * GetPanelThickness();
+                }
             }
         }
 
@@ -211,13 +306,19 @@ namespace GameLab.Week4
                 board.CubeHeight * 0.86f,
                 GetPanelThickness());
             if (cell.TryGetComponent(out Collider cellCollider)) Destroy(cellCollider);
-            cell.GetComponent<Renderer>().material = CreateDisplayMaterial(new Color(0.045f, 0.055f, 0.07f));
+            cell.GetComponent<Renderer>().sharedMaterial = panelCellMaterial != null
+                ? panelCellMaterial
+                : CreateDisplayMaterial(new Color(0.045f, 0.055f, 0.07f));
         }
 
         private Vector3 GetPanelCellPosition(float column, float row)
         {
             Vector3 basePosition = board.GridToWorld(new Vector3Int(PanelGridX, 0, GetPanelDepthStart()));
-            return basePosition + board.transform.forward * (column * board.CellSize) +
+            Vector3 worldOffset = board.transform.right * panelPositionOffset.x +
+                                  board.transform.up * panelPositionOffset.y +
+                                  board.transform.forward * panelPositionOffset.z;
+            return basePosition + worldOffset +
+                   board.transform.forward * (column * board.CellSize) +
                    board.transform.up * (row * board.CubeHeight);
         }
 
@@ -270,7 +371,9 @@ namespace GameLab.Week4
             if (root == null) return;
             for (int index = root.childCount - 1; index >= 0; index--)
             {
-                Destroy(root.GetChild(index).gameObject);
+                GameObject child = root.GetChild(index).gameObject;
+                if (Application.isPlaying) Destroy(child);
+                else DestroyImmediate(child);
             }
         }
     }

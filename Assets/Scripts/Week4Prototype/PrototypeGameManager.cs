@@ -22,6 +22,7 @@ namespace GameLab.Week4
 
         public bool IsCurrentStageSolved => hasWon;
         public LightSimulationResult LastLightResult => lastLightResult;
+        public Camera PlayerCamera => playerCamera;
 
         public void Initialize(GridBoard targetBoard, Camera targetCamera, int[] target)
         {
@@ -146,7 +147,9 @@ namespace GameLab.Week4
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
                 Ray ray = playerCamera.ScreenPointToRay(pointer);
-                if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.TryGetComponent(out DraggableCube cube))
+                if (Physics.Raycast(ray, out RaycastHit hit) &&
+                    hit.collider.TryGetComponent(out DraggableCube cube) &&
+                    !cube.InteractionLocked)
                 {
                     selectedCube = cube;
                     selectedCube.BeginDrag();

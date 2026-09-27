@@ -13,6 +13,7 @@ namespace GameLab.Week4
         [Header("동작 애니메이션")]
         [Min(0f)] [SerializeField] private float returnDuration = 0.28f;
         [Min(0f)] [SerializeField] private float rotationDuration = 0.14f;
+        [SerializeField] private bool interactionLocked;
 
         // 직렬화하지 않고 매번 게임 시작 시점의 실제 위치를 원위치로 새로 기록한다.
         private Vector3 gameStartPosition;
@@ -23,6 +24,7 @@ namespace GameLab.Week4
 
         public bool IsPlaced { get; private set; }
         public Vector2Int Cell { get; private set; }
+        public bool InteractionLocked => interactionLocked;
 
         private void Awake()
         {
@@ -44,6 +46,12 @@ namespace GameLab.Week4
             }
         }
 
+        /// <summary>격자 외곽의 고정 Reserve 큐브는 드래그와 회전을 모두 받지 않는다.</summary>
+        public void SetInteractionLocked(bool locked)
+        {
+            interactionLocked = locked;
+        }
+
         /// <summary>스테이지 데이터가 지정한 시작 칸에 큐브를 즉시 배치한다.</summary>
         public void PlaceAtStageStart(Vector2Int cell)
         {
@@ -60,6 +68,7 @@ namespace GameLab.Week4
         /// <summary>드래그 시작 위치를 저장하고 기존 스택에서 잠시 제외한다.</summary>
         public void BeginDrag()
         {
+            if (interactionLocked) return;
             ResolveBoardReference();
 
             // 원위치로 복귀하던 중 다시 잡으면 현재 위치에서 즉시 드래그를 이어 간다.
@@ -86,6 +95,7 @@ namespace GameLab.Week4
         /// <summary>유효한 격자면 자석처럼 붙이고, 아니면 이번 게임의 시작 위치로 되돌린다.</summary>
         public bool EndDrag()
         {
+            if (interactionLocked) return false;
             ResolveBoardReference();
             if (board == null)
             {
@@ -111,7 +121,7 @@ namespace GameLab.Week4
         /// <summary>WASD 입력을 90도 단위의 월드 회전으로 적용한다.</summary>
         public void RotateBy(Vector3 axis, float degrees)
         {
-            if (axis.sqrMagnitude < 0.001f)
+            if (interactionLocked || axis.sqrMagnitude < 0.001f)
             {
                 return;
             }

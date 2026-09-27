@@ -23,6 +23,7 @@ namespace GameLab.Week4
 
         // 좌표별 스택을 분리해 높이 제한 없이 큐브를 쌓는다.
         private readonly Dictionary<Vector2Int, List<DraggableCube>> stacks = new();
+        private readonly Dictionary<Vector3Int, DraggableCube> externalCubes = new();
         private Coroutine lightEffectCoroutine;
 
         public int Width => width;
@@ -50,6 +51,7 @@ namespace GameLab.Week4
         {
             CancelLightEffects();
             stacks.Clear();
+            externalCubes.Clear();
             BoardChanged?.Invoke();
         }
 
@@ -188,6 +190,13 @@ namespace GameLab.Week4
         /// <summary>격자 좌표와 층으로 큐브를 찾는다. 빈 공간이면 null을 반환한다.</summary>
         public DraggableCube GetCubeAt(Vector3Int gridPosition)
         {
+            if (externalCubes.TryGetValue(gridPosition, out DraggableCube externalCube))
+            {
+                return externalCube != null && externalCube.gameObject.activeInHierarchy
+                    ? externalCube
+                    : null;
+            }
+
             Vector2Int cell = new(gridPosition.x, gridPosition.z);
             if (!stacks.TryGetValue(cell, out List<DraggableCube> stack) ||
                 gridPosition.y < 0 || gridPosition.y >= stack.Count)
@@ -196,6 +205,23 @@ namespace GameLab.Week4
             }
 
             return stack[gridPosition.y];
+        }
+
+        /// <summary>격자 외곽의 고정 큐브를 논리 광선 계산에 등록한다.</summary>
+        public void RegisterExternalCube(DraggableCube cube)
+        {
+            if (cube == null) return;
+            externalCubes[WorldToGridCoordinate(cube.transform.position)] = cube;
+        }
+
+        /// <summary>격자 바깥까지 포함해 월드 위치를 가장 가까운 3차원 논리 좌표로 바꾼다.</summary>
+        public Vector3Int WorldToGridCoordinate(Vector3 worldPosition)
+        {
+            Vector3 local = transform.InverseTransformPoint(worldPosition);
+            int x = Mathf.RoundToInt(local.x / cellSize + (width - 1) * 0.5f);
+            int z = Mathf.RoundToInt(local.z / cellSize + (depth - 1) * 0.5f);
+            int y = Mathf.RoundToInt((local.y - surfaceY - cubeHeight * 0.5f) / cubeHeight);
+            return new Vector3Int(x, Mathf.Max(0, y), z);
         }
 
         /// <summary>전등과 광선 표시용으로 3차원 격자 중심을 월드 좌표로 변환한다.</summary>
@@ -316,6 +342,25 @@ namespace GameLab.Week4
                 }
             }
 
+            // 격자 외곽에 고정된 Reserve 발광 큐브도 인접한 가상 칸에서 빛을 보낸다.
+            foreach (KeyValuePair<Vector3Int, DraggableCube> pair in externalCubes)
+            {
+                DraggableCube cube = pair.Value;
+                if (cube == null || !cube.gameObject.activeInHierarchy ||
+                    !cube.TryGetComponent(out PuzzleCubeProperties properties) ||
+                    !properties.EmitsLight)
+                {
+                    continue;
+                }
+
+                TraceBeam(
+                    pair.Key,
+                    properties.GetEmitterDirection(transform),
+                    properties.LightColor,
+                    verticalLimit,
+                    result);
+            }
+
             return result;
         }
 
@@ -395,14 +440,15 @@ namespace GameLab.Week4
             Vector3Int initialDirection,
             PuzzleLightColor initialColor,
             int verticalLimit,
-            LightSimulationResult result)
+            LightSimulationResult result,
+            HashSet<string> sharedVisited = null)
         {
             if (initialDirection == Vector3Int.zero) return;
 
             Vector3Int position = origin;
             Vector3Int direction = initialDirection;
             PuzzleLightColor color = initialColor;
-            var visited = new HashSet<string>();
+            HashSet<string> visited = sharedVisited ?? new HashSet<string>();
 
             // 보드 크기보다 넉넉한 제한과 방문 상태 검사를 함께 사용해 굴절 고리를 안전하게 끝낸다.
             int maximumSteps = Mathf.Max(32, width * depth * Mathf.Max(1, verticalLimit) * 8);
@@ -423,7 +469,8 @@ namespace GameLab.Week4
                 }
 
                 if (reachedLamp) return;
-                if (!IsLightCoordinateInsideBoard(next, verticalLimit)) return;
+                if (!IsLightCoordinateInsideBoard(next, verticalLimit) &&
+                    !externalCubes.ContainsKey(next)) return;
 
                 DraggableCube hitCube = GetCubeAt(next);
                 if (hitCube == null)
@@ -460,7 +507,20 @@ namespace GameLab.Week4
                     continue;
                 }
 
-                // 일반, 바사삭, 스티로폼, 발광 큐브의 다른 면은 모두 빛을 차단한다.
+                if (properties.SplitsLight &&
+                    properties.TryGetSplitDirections(
+                        direction,
+                        transform,
+                        out Vector3Int splitDirectionA,
+                        out Vector3Int splitDirectionB))
+                {
+                    // 두 갈래가 같은 상태로 다시 합쳐지거나 순환하면 한 번만 계산한다.
+                    TraceBeam(next, splitDirectionA, color, verticalLimit, result, visited);
+                    TraceBeam(next, splitDirectionB, color, verticalLimit, result, visited);
+                    return;
+                }
+
+                // 일반, 바사삭, 스티로폼, 발광 및 빛 분기 큐브의 다른 면은 모두 빛을 차단한다.
                 return;
             }
         }

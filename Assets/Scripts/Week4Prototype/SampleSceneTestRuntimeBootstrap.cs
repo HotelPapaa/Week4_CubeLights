@@ -253,6 +253,8 @@ namespace GameLab.Week4
         private static PuzzleCubeType InferCubeType(string objectName)
         {
             string normalized = objectName.ToLowerInvariant();
+            if (normalized.Contains("splitter") || normalized.Contains("분광") || normalized.Contains("분기"))
+                return PuzzleCubeType.LightSplitter;
             if (normalized.Contains("emitter") || normalized.Contains("발광")) return PuzzleCubeType.LightEmitter;
             if (normalized.Contains("refractor") || normalized.Contains("굴절")) return PuzzleCubeType.Refractor;
             if (normalized.Contains("coloredglass") || normalized.Contains("색유리")) return PuzzleCubeType.ColoredGlass;

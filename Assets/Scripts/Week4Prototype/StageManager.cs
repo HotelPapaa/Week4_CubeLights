@@ -125,15 +125,29 @@ namespace GameLab.Week4
             {
                 if (spawn.prefab == null) continue;
 
+                Vector3 initialPosition = spawn.usesReserveSlot
+                    ? GetReserveSlotWorldPosition(spawn.reserveSide, spawn.reserveSlot)
+                    : spawnOrigin + spawn.localPosition;
+                Quaternion initialRotation = spawn.usesReserveSlot
+                    ? board.transform.rotation * Quaternion.Euler(spawn.localEulerAngles)
+                    : Quaternion.Euler(spawn.localEulerAngles);
+
                 GameObject cubeObject = Instantiate(
                     spawn.prefab,
-                    spawnOrigin + spawn.localPosition,
-                    Quaternion.Euler(spawn.localEulerAngles),
+                    initialPosition,
+                    initialRotation,
                     runtimeCubeRoot);
+                // 수동 제작된 Refractor를 포함해 모든 큐브의 프리팹 원본 비율을 그대로 유지한다.
+                cubeObject.transform.localScale = spawn.prefab.transform.localScale;
                 cubeObject.name = spawn.prefab.name;
                 DraggableCube cube = cubeObject.GetComponent<DraggableCube>() ??
                                      cubeObject.AddComponent<DraggableCube>();
                 cube.Initialize(board);
+                cube.SetInteractionLocked(spawn.usesReserveSlot);
+                if (spawn.usesReserveSlot)
+                {
+                    board.RegisterExternalCube(cube);
+                }
                 if (spawn.startsOnBoard)
                 {
                     cube.PlaceAtStageStart(spawn.boardCell);
@@ -143,6 +157,68 @@ namespace GameLab.Week4
             stageSolved = false;
             gameManager?.SetInteractionEnabled(true);
             Debug.Log($"스테이지 로드: {currentStageIndex + 1}. {currentStage.DisplayName}", this);
+        }
+
+        /// <summary>
+        /// Player Camera에서 보이는 격자의 가상 바깥 한 칸을 Reserve 자리로 사용한다.
+        /// Left/Right는 화면 좌우, Near/Far는 화면 아래/위 방향이다.
+        /// </summary>
+        private Vector3 GetReserveSlotWorldPosition(CubeReserveSide side, int requestedSlot)
+        {
+            GetPlayerViewAxes(out Vector3Int screenRight, out Vector3Int screenNear);
+            Vector3Int edgeDirection = side switch
+            {
+                CubeReserveSide.Left => -screenRight,
+                CubeReserveSide.Right => screenRight,
+                CubeReserveSide.Far => -screenNear,
+                _ => screenNear
+            };
+            Vector3Int slotDirection = side == CubeReserveSide.Left || side == CubeReserveSide.Right
+                ? screenNear
+                : screenRight;
+
+            int edgeAxisCount = edgeDirection.x != 0 ? board.Width : board.Depth;
+            int slotCount = slotDirection.x != 0 ? board.Width : board.Depth;
+            // Inspector에서는 사람이 읽기 쉽게 1부터 센다. Left 2는 3칸짜리 왼쪽 변의 정중앙이다.
+            int slot = Mathf.Clamp(requestedSlot, 1, Mathf.Max(1, slotCount)) - 1;
+            float edgeDistance = (edgeAxisCount + 1) * 0.5f * board.CellSize;
+            float slotOffset = (slot - (slotCount - 1) * 0.5f) * board.CellSize;
+            Vector3 localPosition = (Vector3)edgeDirection * edgeDistance +
+                                    (Vector3)slotDirection * slotOffset;
+            float y = board.SurfaceY + board.CubeHeight * 0.5f;
+            localPosition.y = y;
+            return board.transform.TransformPoint(localPosition);
+        }
+
+        private void GetPlayerViewAxes(out Vector3Int screenRight, out Vector3Int screenNear)
+        {
+            Camera camera = gameManager != null ? gameManager.PlayerCamera : Camera.main;
+            if (camera == null)
+            {
+                screenRight = Vector3Int.right;
+                screenNear = new Vector3Int(0, 0, -1);
+                return;
+            }
+
+            Vector3 localCameraRight = board.transform.InverseTransformDirection(camera.transform.right);
+            Vector3 localToCamera = board.transform.InverseTransformPoint(camera.transform.position);
+            localCameraRight.y = 0f;
+            localToCamera.y = 0f;
+
+            if (Mathf.Abs(localCameraRight.x) >= Mathf.Abs(localCameraRight.z))
+            {
+                screenRight = localCameraRight.x >= 0f ? Vector3Int.right : Vector3Int.left;
+                screenNear = localToCamera.z >= 0f
+                    ? new Vector3Int(0, 0, 1)
+                    : new Vector3Int(0, 0, -1);
+            }
+            else
+            {
+                screenRight = localCameraRight.z >= 0f
+                    ? new Vector3Int(0, 0, 1)
+                    : new Vector3Int(0, 0, -1);
+                screenNear = localToCamera.x >= 0f ? Vector3Int.right : Vector3Int.left;
+            }
         }
 
         public void RestartStage()

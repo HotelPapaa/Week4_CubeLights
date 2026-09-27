@@ -29,9 +29,11 @@ namespace GameLab.Week4.Editor
             GameObject normal = LoadPrefab("Cube");
             GameObject emitter = LoadPrefab("LightEmitter");
             GameObject refractor = LoadPrefab("Refractor");
+            GameObject splitter = LoadPrefab("LightSplitter");
             GameObject blueGlass = LoadPrefab("ColoredGlass_Blue");
             GameObject ice = LoadPrefab("Ice");
-            if (normal == null || emitter == null || refractor == null || blueGlass == null || ice == null)
+            if (normal == null || emitter == null || refractor == null || splitter == null ||
+                blueGlass == null || ice == null)
             {
                 Debug.LogWarning("전등 퍼즐 캠페인 생성 보류: 필요한 큐브 프리팹이 준비되지 않았습니다.");
                 return;
@@ -76,6 +78,21 @@ namespace GameLab.Week4.Editor
                 new[] { BoardSpawn(emitter, 2, 2), BoardSpawn(ice, 1, 2) },
                 new[] { farCenterWhite });
 
+            PuzzleStageDefinition stage5 = CreateOrUpdateStage(
+                "Stage_Light_005_Splitter",
+                "light-005",
+                "두 갈래의 빛",
+                "빛 분기 큐브의 한 입력 면으로 빛을 받아 두 전등을 동시에 켜세요.",
+                gridSize,
+                new[]
+                {
+                    ReserveSpawn(emitter, CubeReserveSide.Left, 2),
+                    TraySpawn(splitter, 0),
+                    TraySpawn(refractor, 1),
+                    TraySpawn(refractor, 2)
+                },
+                new[] { FrontLamp(0, 0), FrontLamp(4, 0) });
+
             PuzzleCampaign campaign = AssetDatabase.LoadAssetAtPath<PuzzleCampaign>(CampaignPath);
             if (campaign == null)
             {
@@ -83,12 +100,12 @@ namespace GameLab.Week4.Editor
                 AssetDatabase.CreateAsset(campaign, CampaignPath);
             }
 
-            campaign.Configure(new[] { stage1, stage2, stage3, stage4 });
+            campaign.Configure(new[] { stage1, stage2, stage3, stage4, stage5 });
             EditorUtility.SetDirty(campaign);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             EditorApplication.delayCall += SampleSceneTestIntegrator.Integrate;
-            Debug.Log("전등 켜기 예시 캠페인 생성 완료: 3x5 격자, 4개 스테이지");
+            Debug.Log("전등 켜기 예시 캠페인 생성 완료: 3x5 격자, 5개 스테이지");
         }
 
         /// <summary>기존 프리팹은 유지하고, 없는 광학 큐브만 Cube 프리팹을 바탕으로 추가한다.</summary>
@@ -104,6 +121,8 @@ namespace GameLab.Week4.Editor
             EnsureCubePrefab("Ice", "Ice", PuzzleCubeType.Ice, PuzzleLightColor.White);
             EnsureCubePrefab("LightEmitter", "Cube", PuzzleCubeType.LightEmitter, PuzzleLightColor.White);
             EnsureCubePrefab("Refractor", "Cube", PuzzleCubeType.Refractor, PuzzleLightColor.White);
+            // 기존 Refractor의 외형을 시작점으로 복제하되 원본 프리팹은 수정하지 않는다.
+            EnsureCubePrefab("LightSplitter", "Refractor", PuzzleCubeType.LightSplitter, PuzzleLightColor.White);
         }
 
         private static void EnsureCubePrefab(
@@ -127,13 +146,10 @@ namespace GameLab.Week4.Editor
                 PuzzleCubeProperties properties = root.GetComponent<PuzzleCubeProperties>() ??
                                                   root.AddComponent<PuzzleCubeProperties>();
                 properties.ConfigureOptics(type, color);
-                if (type == PuzzleCubeType.LightEmitter || type == PuzzleCubeType.Refractor)
+                if (type == PuzzleCubeType.LightSplitter && root.transform.Find("SplitterVisual") == null)
                 {
-                    Material emitterMarker = AssetDatabase.LoadAssetAtPath<Material>(
-                        "Assets/Materials/CubeTypes/M_Marker_EmitterArrow.mat");
-                    Material refractorMarker = AssetDatabase.LoadAssetAtPath<Material>(
-                        "Assets/Materials/CubeTypes/M_Marker_RefractorArrow.mat");
-                    properties.RebuildOpticMarkers(emitterMarker, refractorMarker);
+                    properties.ConfigureSplitterDefaults();
+                    ConfigureLightSplitterVisual(root);
                 }
 
                 EditorUtility.SetDirty(draggable);
@@ -143,6 +159,94 @@ namespace GameLab.Week4.Editor
             finally
             {
                 PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        /// <summary>
+        /// Refractor에서 복제된 포트와 Quad 메시만 이용해 T자형 분기 표시를 만든다.
+        /// SplitterVisual이 이미 있으면 사용자가 편집한 외형을 보존하기 위해 다시 만들지 않는다.
+        /// </summary>
+        private static void ConfigureLightSplitterVisual(GameObject root)
+        {
+            Transform inputPort = root.transform.Find("Quad");
+            Transform outputPortA = root.transform.Find("Quad (1)");
+            if (inputPort == null || outputPortA == null) return;
+
+            inputPort.name = "SplitterInputPort";
+            PlaceSplitterPort(inputPort, Vector3Int.right, 0.46f);
+
+            outputPortA.name = "SplitterOutputPortA";
+            PlaceSplitterPort(outputPortA, new Vector3Int(0, 0, -1), 0.33f);
+
+            GameObject outputPortBObject = Object.Instantiate(outputPortA.gameObject, root.transform);
+            outputPortBObject.name = "SplitterOutputPortB";
+            PlaceSplitterPort(outputPortBObject.transform, new Vector3Int(0, 0, 1), 0.33f);
+
+            GameObject visualRootObject = new("SplitterVisual");
+            visualRootObject.transform.SetParent(root.transform, false);
+            Transform visualRoot = visualRootObject.transform;
+
+            // 기존 포트 Quad를 얇은 막대로 재사용해 위·아래에서 보이는 추가 출력 화살표를 만든다.
+            CreateBranchArrow(outputPortA.gameObject, visualRoot, Vector3.up, "TopBranch");
+            CreateBranchArrow(outputPortA.gameObject, visualRoot, Vector3.down, "BottomBranch");
+        }
+
+        private static void PlaceSplitterPort(Transform port, Vector3Int faceDirection, float size)
+        {
+            Vector3 direction = ((Vector3)faceDirection).normalized;
+            port.localPosition = direction * 0.505f + Vector3.up * 0.045f;
+            port.localRotation = Quaternion.LookRotation(-direction, Vector3.up);
+            port.localScale = Vector3.one * size;
+        }
+
+        private static void CreateBranchArrow(
+            GameObject quadTemplate,
+            Transform parent,
+            Vector3 surfaceNormal,
+            string prefix)
+        {
+            float surfaceY = surfaceNormal.y > 0f ? 0.515f : -0.515f;
+            Quaternion surfaceRotation = Quaternion.LookRotation(surfaceNormal, Vector3.forward);
+
+            CreateGuideQuad(
+                quadTemplate,
+                parent,
+                $"{prefix}_Body",
+                new Vector3(0f, surfaceY, 0.22f),
+                new Vector3(0.05f, 0.38f, 0.4f),
+                surfaceRotation);
+            CreateGuideQuad(
+                quadTemplate,
+                parent,
+                $"{prefix}_HeadLeft",
+                new Vector3(-0.055f, surfaceY, 0.405f),
+                new Vector3(0.045f, 0.16f, 0.4f),
+                surfaceRotation * Quaternion.Euler(0f, 0f, 42f));
+            CreateGuideQuad(
+                quadTemplate,
+                parent,
+                $"{prefix}_HeadRight",
+                new Vector3(0.055f, surfaceY, 0.405f),
+                new Vector3(0.045f, 0.16f, 0.4f),
+                surfaceRotation * Quaternion.Euler(0f, 0f, -42f));
+        }
+
+        private static void CreateGuideQuad(
+            GameObject template,
+            Transform parent,
+            string objectName,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Quaternion localRotation)
+        {
+            GameObject part = Object.Instantiate(template, parent);
+            part.name = objectName;
+            part.transform.localPosition = localPosition;
+            part.transform.localRotation = localRotation;
+            part.transform.localScale = localScale;
+            foreach (Collider collider in part.GetComponentsInChildren<Collider>(true))
+            {
+                Object.DestroyImmediate(collider);
             }
         }
 
@@ -176,6 +280,15 @@ namespace GameLab.Week4.Editor
                 prefab,
                 new Vector3(0.08f + column * 0.26f, 0.1f, -0.52f + row * 0.28f),
                 Vector3.zero);
+        }
+
+        private static StageCubeSpawn ReserveSpawn(
+            GameObject prefab,
+            CubeReserveSide side,
+            int slot,
+            Vector3? eulerAngles = null)
+        {
+            return new StageCubeSpawn(prefab, side, slot, eulerAngles ?? Vector3.zero);
         }
 
         private static StageCubeSpawn BoardSpawn(GameObject prefab, int x, int z)

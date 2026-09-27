@@ -17,6 +17,8 @@ namespace GameLab.Week4.Editor
     {
         private const string ScenePath = "Assets/Scenes/SampleScene_Test.unity";
         private const string GameplayRootName = "Week4Gameplay";
+        private const string PanelCellMaterialPath = "Assets/Materials/CubeTypes/M_LightTargetStage_Cell.mat";
+        private const string LampOffMaterialPath = "Assets/Materials/CubeTypes/M_LightTargetStage_LampOff.mat";
         private const int TargetGridWidth = 3;
         private const int TargetGridDepth = 5;
 
@@ -197,10 +199,57 @@ namespace GameLab.Week4.Editor
             GameObject legacyCubes = FindTransform(scene, "Cubes")?.gameObject;
             if (board == null || manager == null || lighting == null) return;
 
+            // 전등판을 런타임 생성물로만 두지 않고 씬에 저장해 Scene/Game 뷰에서 항상 확인한다.
+            LightPuzzleVisualizer visualizer = gameplayRoot.GetComponent<LightPuzzleVisualizer>() ??
+                                               gameplayRoot.AddComponent<LightPuzzleVisualizer>();
+            Material cellMaterial = EnsurePreviewMaterial(
+                PanelCellMaterialPath,
+                new Color(0.045f, 0.055f, 0.07f, 1f),
+                Color.black);
+            Material lampMaterial = EnsurePreviewMaterial(
+                LampOffMaterialPath,
+                new Color(0.16f, 0.16f, 0.15f, 1f),
+                new Color(0.025f, 0.025f, 0.022f, 1f));
+            visualizer.Initialize(board);
+            visualizer.ConfigureMaterials(cellMaterial, lampMaterial);
+            if (campaign != null && campaign.StageCount > 0)
+            {
+                visualizer.ConfigureStage(campaign.GetStage(0));
+                visualizer.SetBeamsVisible(false);
+            }
+
             StageManager stageManager = gameplayRoot.GetComponent<StageManager>() ??
                                         gameplayRoot.AddComponent<StageManager>();
             stageManager.Initialize(campaign, board, manager, lighting, legacyCubes);
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        private static Material EnsurePreviewMaterial(
+            string assetPath,
+            Color baseColor,
+            Color emissionColor)
+        {
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
+            if (material != null) return material;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            if (shader == null) return null;
+
+            material = new Material(shader)
+            {
+                name = System.IO.Path.GetFileNameWithoutExtension(assetPath),
+                color = baseColor
+            };
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", baseColor);
+            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", 0.2f);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.SetColor("_EmissionColor", emissionColor);
+                if (emissionColor.maxColorComponent > 0f) material.EnableKeyword("_EMISSION");
+            }
+
+            AssetDatabase.CreateAsset(material, assetPath);
+            return material;
         }
 
         /// <summary>격자선의 렌더러는 유지하고 씬 인스턴스의 낙하 물리와 클릭 충돌만 끈다.</summary>
@@ -310,6 +359,8 @@ namespace GameLab.Week4.Editor
         private static PuzzleCubeType InferCubeType(string objectName)
         {
             string normalized = objectName.ToLowerInvariant();
+            if (normalized.Contains("splitter") || normalized.Contains("분광") || normalized.Contains("분기"))
+                return PuzzleCubeType.LightSplitter;
             if (normalized.Contains("emitter") || normalized.Contains("발광")) return PuzzleCubeType.LightEmitter;
             if (normalized.Contains("refractor") || normalized.Contains("굴절")) return PuzzleCubeType.Refractor;
             if (normalized.Contains("coloredglass") || normalized.Contains("색유리")) return PuzzleCubeType.ColoredGlass;
