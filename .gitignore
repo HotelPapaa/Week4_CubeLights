@@ -107,3 +107,21 @@ InitTestScene*.unity*
 
 # VS Code
 .vscode
+Assets/TextMesh Pro/Shaders/TMP_SDF-URP Unlit.shadergraph
+Assets/TextMesh Pro/Shaders/TMP_SDF-URP Unlit.shadergraph.meta
+Assets/TextMesh Pro/Shaders/TMP_Sprite.shader
+Assets/TextMesh Pro/Shaders/TMP_Sprite.shader.meta
+Assets/TextMesh Pro/Shaders/TMPro.cginc
+Assets/TextMesh Pro/Shaders/TMPro.cginc.meta
+Assets/TextMesh Pro/Shaders/TMPro_Mobile.cginc
+Assets/TextMesh Pro/Shaders/TMPro_Mobile.cginc.meta
+Assets/TextMesh Pro/Shaders/TMPro_Properties.cginc
+Assets/TextMesh Pro/Shaders/TMPro_Properties.cginc.meta
+Assets/TextMesh Pro/Shaders/TMPro_Surface.cginc
+Assets/TextMesh Pro/Shaders/TMPro_Surface.cginc.meta
+Assets/TextMesh Pro/Sprites/EmojiOne Attribution.txt
+Assets/TextMesh Pro/Sprites/EmojiOne Attribution.txt.meta
+Assets/TextMesh Pro/Sprites/EmojiOne.json
+Assets/TextMesh Pro/Sprites/EmojiOne.json.meta
+Assets/TextMesh Pro/Sprites/EmojiOne.png
+Assets/TextMesh Pro/Sprites/EmojiOne.png.meta
