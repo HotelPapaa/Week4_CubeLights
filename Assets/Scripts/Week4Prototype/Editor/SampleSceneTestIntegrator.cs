@@ -19,6 +19,7 @@ namespace GameLab.Week4.Editor
         private const string GameplayRootName = "Week4Gameplay";
         private const string PanelCellMaterialPath = "Assets/Materials/CubeTypes/M_LightTargetStage_Cell.mat";
         private const string LampOffMaterialPath = "Assets/Materials/CubeTypes/M_LightTargetStage_LampOff.mat";
+        private const string LaserPrefabPath = "Assets/Prefabs/Laser.prefab";
         private const int TargetGridWidth = 3;
         private const int TargetGridDepth = 5;
 
@@ -197,8 +198,10 @@ namespace GameLab.Week4.Editor
                 LampOffMaterialPath,
                 new Color(0.16f, 0.16f, 0.15f, 1f),
                 new Color(0.025f, 0.025f, 0.022f, 1f));
+            GameObject laserPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LaserPrefabPath);
             visualizer.Initialize(board);
             visualizer.ConfigureMaterials(cellMaterial, lampMaterial);
+            visualizer.ConfigureLaserPrefab(laserPrefab);
             if (campaign != null && campaign.StageCount > 0)
             {
                 visualizer.ConfigureStage(campaign.GetStage(0));

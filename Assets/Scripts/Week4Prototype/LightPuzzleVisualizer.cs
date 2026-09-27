@@ -14,6 +14,9 @@ namespace GameLab.Week4
         private const int PanelGridX = -1;
 
         [SerializeField] private GridBoard board;
+        [Header("광선 연출")]
+        [SerializeField] private GameObject laserPrefab;
+        [Tooltip("Laser Prefab을 연결하지 않았을 때 사용하는 LineRenderer 굵기")]
         [Min(0.01f)] [SerializeField] private float beamWidthRatio = 0.08f;
         [Header("목표 스테이지 위치")]
         [Tooltip("보드 로컬 축 기준 오프셋입니다. X: 앞/뒤, Y: 높이, Z: 좌/우")]
@@ -27,6 +30,7 @@ namespace GameLab.Week4
         private Transform panelRoot;
         private Transform cellRoot;
         private Transform lampRoot;
+        private LaserPointer laserPointer;
         private PuzzleStageDefinition stage;
         private LightSimulationResult lastResult;
         private bool beamsVisible;
@@ -35,6 +39,15 @@ namespace GameLab.Week4
         {
             board = targetBoard;
             EnsureRoots();
+            EnsureLaserPointer();
+        }
+
+        /// <summary>계산된 광선을 표시할 Laser Prefab을 연결한다.</summary>
+        public void ConfigureLaserPrefab(GameObject prefab)
+        {
+            laserPrefab = prefab;
+            EnsureRoots();
+            EnsureLaserPointer();
         }
 
         /// <summary>에디터에서 저장한 전등판 재질을 연결해 씬 뷰에서도 같은 외형을 유지한다.</summary>
@@ -57,6 +70,7 @@ namespace GameLab.Week4
             stage = targetStage;
             lastResult = null;
             EnsureRoots();
+            ClearBeamVisuals();
             ClearChildren(cellRoot);
             ClearChildren(lampRoot);
             lampRenderers.Clear();
@@ -114,25 +128,17 @@ namespace GameLab.Week4
         {
             lastResult = result;
             EnsureRoots();
-            ClearChildren(beamRoot);
-            beamLines.Clear();
+            EnsureLaserPointer();
+            ClearBeamVisuals();
 
             if (result == null || board == null) return;
-            foreach (LightBeamSegment segment in result.Segments)
+            if (laserPointer != null && laserPointer.CanRender)
             {
-                GameObject beamObject = new("Beam");
-                beamObject.transform.SetParent(beamRoot, false);
-                LineRenderer line = beamObject.AddComponent<LineRenderer>();
-                line.useWorldSpace = true;
-                line.positionCount = 2;
-                line.SetPosition(0, board.GridToWorld(segment.From));
-                line.SetPosition(1, board.GridToWorld(segment.To));
-                line.startWidth = line.endWidth = Mathf.Max(0.01f, board.CellSize * beamWidthRatio);
-                line.numCapVertices = 4;
-                Color beamColor = LightDirectionUtility.ToDisplayColor(segment.Color);
-                line.startColor = line.endColor = beamColor;
-                line.material = CreateDisplayMaterial(beamColor);
-                beamLines.Add(line);
+                laserPointer.Play(result.Segments);
+            }
+            else
+            {
+                CreateLineBeams(result.Segments);
             }
 
             for (int index = 0; index < lampRenderers.Count; index++)
@@ -158,6 +164,7 @@ namespace GameLab.Week4
             beamsVisible = visible;
             EnsureRoots();
             beamRoot.gameObject.SetActive(visible);
+            laserPointer?.SetVisible(visible);
             panelRoot.gameObject.SetActive(true);
 
             if (!visible && stage != null && Application.isPlaying)
@@ -297,6 +304,41 @@ namespace GameLab.Week4
                     lamp.position = GetPanelCellPosition(panelColumn, gridY) +
                                     board.transform.right * GetPanelThickness();
                 }
+            }
+        }
+
+        private void EnsureLaserPointer()
+        {
+            if (laserPrefab == null || board == null || beamRoot == null) return;
+
+            laserPointer = GetComponent<LaserPointer>() ?? gameObject.AddComponent<LaserPointer>();
+            laserPointer.Configure(board, beamRoot, laserPrefab);
+        }
+
+        private void ClearBeamVisuals()
+        {
+            laserPointer?.Clear();
+            ClearChildren(beamRoot);
+            beamLines.Clear();
+        }
+
+        private void CreateLineBeams(IReadOnlyList<LightBeamSegment> segments)
+        {
+            foreach (LightBeamSegment segment in segments)
+            {
+                GameObject beamObject = new("Beam");
+                beamObject.transform.SetParent(beamRoot, false);
+                LineRenderer line = beamObject.AddComponent<LineRenderer>();
+                line.useWorldSpace = true;
+                line.positionCount = 2;
+                line.SetPosition(0, board.GridToWorld(segment.From));
+                line.SetPosition(1, board.GridToWorld(segment.To));
+                line.startWidth = line.endWidth = Mathf.Max(0.01f, board.CellSize * beamWidthRatio);
+                line.numCapVertices = 4;
+                Color beamColor = LightDirectionUtility.ToDisplayColor(segment.Color);
+                line.startColor = line.endColor = beamColor;
+                line.material = CreateDisplayMaterial(beamColor);
+                beamLines.Add(line);
             }
         }
 

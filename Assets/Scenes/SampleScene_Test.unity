@@ -9051,6 +9051,7 @@ GameObject:
   - component: {fileID: 1518278688}
   - component: {fileID: 1518278689}
   - component: {fileID: 1518278690}
+  - component: {fileID: 1518278691}
   m_Layer: 0
   m_Name: Week4Gameplay
   m_TagString: Untagged
@@ -9151,10 +9152,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   board: {fileID: 261625447}
+  laserPrefab: {fileID: 4590271454317924687, guid: 5ebcc0f9bf036fd4c9006528c7672d34, type: 3}
   beamWidthRatio: 0.08
   panelPositionOffset: {x: -0.6, y: 0, z: 0}
   panelCellMaterial: {fileID: 2100000, guid: 9e24716cb7ffc304a8bb2c0ca2541735, type: 2}
   lampOffMaterial: {fileID: 2100000, guid: 0fd939d21b427f1458986dfc28c9fb50, type: 2}
+--- !u!114 &1518278691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1518278684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ea1c56d4405e2343a59c38fcf6fc521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  laserPrefab: {fileID: 4590271454317924687, guid: 5ebcc0f9bf036fd4c9006528c7672d34, type: 3}
+  prefabUnitLength: 1
+  growthSpeed: 6
+  emissionMultiplier: 1.6
 --- !u!1001 &1551703105
 PrefabInstance:
   m_ObjectHideFlags: 0
