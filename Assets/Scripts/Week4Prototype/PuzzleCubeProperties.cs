@@ -65,7 +65,8 @@ namespace GameLab.Week4
         public bool SplitsLight => cubeType == PuzzleCubeType.LightSplitter && !removedByRule;
         public bool PassesLightStraight => !removedByRule &&
                                            (cubeType == PuzzleCubeType.Glass ||
-                                            cubeType == PuzzleCubeType.ColoredGlass);
+                                            cubeType == PuzzleCubeType.ColoredGlass ||
+                                            cubeType == PuzzleCubeType.Ice);
         public PuzzleLightColor LightColor => lightColor;
 
         private void Awake()

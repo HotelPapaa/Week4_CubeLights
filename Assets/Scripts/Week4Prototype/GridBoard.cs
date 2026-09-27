@@ -485,7 +485,6 @@ namespace GameLab.Week4
                 if (properties.MeltsInLight)
                 {
                     result.IlluminatedIce.Add(properties);
-                    return;
                 }
 
                 if (properties.PassesLightStraight)
