@@ -28,6 +28,7 @@ namespace GameLab.Week4
         private Transform cellRoot;
         private Transform lampRoot;
         private PuzzleStageDefinition stage;
+        private LightSimulationResult lastResult;
         private bool beamsVisible;
 
         public void Initialize(GridBoard targetBoard)
@@ -54,6 +55,7 @@ namespace GameLab.Week4
         public void ConfigureStage(PuzzleStageDefinition targetStage)
         {
             stage = targetStage;
+            lastResult = null;
             EnsureRoots();
             ClearChildren(cellRoot);
             ClearChildren(lampRoot);
@@ -110,6 +112,7 @@ namespace GameLab.Week4
         /// <summary>현재 광선 경로와 각 전등의 성공·오입사 상태를 갱신한다.</summary>
         public void ShowResult(LightSimulationResult result)
         {
+            lastResult = result;
             EnsureRoots();
             ClearChildren(beamRoot);
             beamLines.Clear();
@@ -161,9 +164,13 @@ namespace GameLab.Week4
             {
                 for (int index = 0; index < lampRenderers.Count && index < stage.LampTargets.Count; index++)
                 {
-                    SetMaterialColor(
-                        lampRenderers[index].material,
-                        GetDimColor(stage.LampTargets[index].requiredColor));
+                    bool staysOn = lastResult != null &&
+                                   index < lastResult.Lamps.Count &&
+                                   lastResult.Lamps[index].IsLatchedOn;
+                    Color color = staysOn
+                        ? LightDirectionUtility.ToDisplayColor(stage.LampTargets[index].requiredColor) * 1.5f
+                        : GetDimColor(stage.LampTargets[index].requiredColor);
+                    SetMaterialColor(lampRenderers[index].material, color);
                 }
             }
         }

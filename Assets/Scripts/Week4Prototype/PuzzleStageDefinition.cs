@@ -1,3 +1,6 @@
+//
+
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,12 +26,17 @@ namespace GameLab.Week4
         public Vector3 localEulerAngles;
         public bool startsOnBoard;
         public Vector2Int boardCell;
-        [Tooltip("켜면 localPosition 대신 격자 외곽 대기 슬롯을 사용합니다.")]
+
+        [Tooltip("켜면 고정되고 그리드 외곽쪽을 사용합니다.")]
         public bool usesReserveSlot;
+
+        // 그리드 외곽쪽 방향
         public CubeReserveSide reserveSide;
+
         [Tooltip("1부터 시작합니다. Left/Right는 1~3, Near/Far는 1~5입니다.")]
         [Min(1)] public int reserveSlot;
 
+        // 보드 바깥에서 시작하는 경우
         public StageCubeSpawn(GameObject cubePrefab, Vector3 position, Vector3 eulerAngles)
         {
             prefab = cubePrefab;
@@ -41,6 +49,7 @@ namespace GameLab.Week4
             reserveSlot = 1;
         }
 
+        // 보드 위에서 시작하는 경우
         public StageCubeSpawn(GameObject cubePrefab, Vector2Int initialBoardCell, Vector3 eulerAngles)
         {
             prefab = cubePrefab;
@@ -53,6 +62,7 @@ namespace GameLab.Week4
             reserveSlot = 1;
         }
 
+        // 그리드 외곽에 놓는 경우
         public StageCubeSpawn(
             GameObject cubePrefab,
             CubeReserveSide side,
@@ -70,7 +80,7 @@ namespace GameLab.Week4
         }
     }
 
-    /// <summary>목표 그림자에서 채워져야 하는 한 칸의 열·층 좌표다.</summary>
+    /// <summary>켜져야 하는 전등의 열·층 좌표다.</summary>
     [Serializable]
     public struct ShadowTargetCell
     {

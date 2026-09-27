@@ -64,6 +64,7 @@ namespace GameLab.Week4
         public LampTarget Target { get; }
         public bool HasCorrectHit { get; private set; }
         public bool HasInvalidHit { get; private set; }
+        public bool IsLatchedOn { get; private set; }
 
         public bool IsSatisfied => HasCorrectHit && !HasInvalidHit;
 
@@ -86,6 +87,14 @@ namespace GameLab.Week4
             {
                 HasInvalidHit = true;
             }
+        }
+
+        /// <summary>한 번 켜진 전등은 이후 광선 상태와 관계없이 현재 스테이지 동안 점등을 유지한다.</summary>
+        public void LatchOn()
+        {
+            IsLatchedOn = true;
+            HasCorrectHit = true;
+            HasInvalidHit = false;
         }
     }
 

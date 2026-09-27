@@ -5,17 +5,11 @@ using UnityEngine;
 
 namespace GameLab.Week4.Editor
 {
-    /// <summary>SampleScene_Test의 3x5 격자를 사용하는 예시 스테이지와 필요한 큐브 프리팹을 생성·갱신한다.</summary>
+    /// <summary>SampleScene_Test의 3x5 격자를 사용하는 예시 스테이지와 필요한 큐브 프리팹을 최초 생성한다.</summary>
     public static class StageContentBuilder
     {
         private const string StageFolder = "Assets/Resources/Stages";
         private const string CampaignPath = StageFolder + "/PuzzleCampaign.asset";
-
-        [InitializeOnLoadMethod]
-        private static void QueueBuild()
-        {
-            EditorApplication.delayCall += BuildExampleCampaign;
-        }
 
         [MenuItem("Tools/GameLab/Build Light Puzzle Campaign")]
         public static void BuildExampleCampaign()
@@ -23,7 +17,6 @@ namespace GameLab.Week4.Editor
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
             EnsureFolder(StageFolder);
-            CubeMaterialAssigner.SetupMaterials();
             EnsureAllCubePrefabs();
 
             GameObject normal = LoadPrefab("Cube");
@@ -42,7 +35,7 @@ namespace GameLab.Week4.Editor
             Vector2Int gridSize = new(3, 5);
             LampTarget farCenterWhite = FrontLamp(2, 0);
 
-            PuzzleStageDefinition stage1 = CreateOrUpdateStage(
+            PuzzleStageDefinition stage1 = CreateStageIfMissing(
                 "Stage_Light_001_Emitter",
                 "light-001",
                 "첫 번째 전등",
@@ -51,7 +44,7 @@ namespace GameLab.Week4.Editor
                 new[] { BoardSpawn(emitter, 2, 2) },
                 new[] { farCenterWhite });
 
-            PuzzleStageDefinition stage2 = CreateOrUpdateStage(
+            PuzzleStageDefinition stage2 = CreateStageIfMissing(
                 "Stage_Light_002_Refractor",
                 "light-002",
                 "모퉁이를 도는 빛",
@@ -60,7 +53,7 @@ namespace GameLab.Week4.Editor
                 new[] { BoardSpawn(emitter, 2, 1), TraySpawn(refractor, 0), TraySpawn(refractor, 1) },
                 new[] { FrontLamp(0, 0) });
 
-            PuzzleStageDefinition stage3 = CreateOrUpdateStage(
+            PuzzleStageDefinition stage3 = CreateStageIfMissing(
                 "Stage_Light_003_BlueFilter",
                 "light-003",
                 "파란 전등",
@@ -69,7 +62,7 @@ namespace GameLab.Week4.Editor
                 new[] { BoardSpawn(emitter, 2, 2), TraySpawn(blueGlass, 0), TraySpawn(normal, 1) },
                 new[] { FrontLamp(2, 0, PuzzleLightColor.Blue) });
 
-            PuzzleStageDefinition stage4 = CreateOrUpdateStage(
+            PuzzleStageDefinition stage4 = CreateStageIfMissing(
                 "Stage_Light_004_MeltingIce",
                 "light-004",
                 "녹은 뒤의 빛",
@@ -78,7 +71,7 @@ namespace GameLab.Week4.Editor
                 new[] { BoardSpawn(emitter, 2, 2), BoardSpawn(ice, 1, 2) },
                 new[] { farCenterWhite });
 
-            PuzzleStageDefinition stage5 = CreateOrUpdateStage(
+            PuzzleStageDefinition stage5 = CreateStageIfMissing(
                 "Stage_Light_005_Splitter",
                 "light-005",
                 "두 갈래의 빛",
@@ -97,15 +90,14 @@ namespace GameLab.Week4.Editor
             if (campaign == null)
             {
                 campaign = ScriptableObject.CreateInstance<PuzzleCampaign>();
+                campaign.Configure(new[] { stage1, stage2, stage3, stage4, stage5 });
                 AssetDatabase.CreateAsset(campaign, CampaignPath);
+                EditorUtility.SetDirty(campaign);
             }
 
-            campaign.Configure(new[] { stage1, stage2, stage3, stage4, stage5 });
-            EditorUtility.SetDirty(campaign);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            EditorApplication.delayCall += SampleSceneTestIntegrator.Integrate;
-            Debug.Log("전등 켜기 예시 캠페인 생성 완료: 3x5 격자, 5개 스테이지");
+            Debug.Log("전등 켜기 예시 캠페인 확인 완료: 없는 애셋만 생성하며 기존 Stage/Campaign 내용은 보존합니다.");
         }
 
         /// <summary>기존 프리팹은 유지하고, 없는 광학 큐브만 Cube 프리팹을 바탕으로 추가한다.</summary>
@@ -250,7 +242,7 @@ namespace GameLab.Week4.Editor
             }
         }
 
-        private static PuzzleStageDefinition CreateOrUpdateStage(
+        private static PuzzleStageDefinition CreateStageIfMissing(
             string assetName,
             string id,
             string title,
@@ -261,13 +253,14 @@ namespace GameLab.Week4.Editor
         {
             string path = $"{StageFolder}/{assetName}.asset";
             PuzzleStageDefinition stage = AssetDatabase.LoadAssetAtPath<PuzzleStageDefinition>(path);
-            if (stage == null)
+            if (stage != null)
             {
-                stage = ScriptableObject.CreateInstance<PuzzleStageDefinition>();
-                AssetDatabase.CreateAsset(stage, path);
+                return stage;
             }
 
+            stage = ScriptableObject.CreateInstance<PuzzleStageDefinition>();
             stage.Configure(id, title, hint, gridSize, spawns, lamps);
+            AssetDatabase.CreateAsset(stage, path);
             EditorUtility.SetDirty(stage);
             return stage;
         }

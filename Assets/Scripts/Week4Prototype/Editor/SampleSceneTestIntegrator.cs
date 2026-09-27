@@ -22,19 +22,6 @@ namespace GameLab.Week4.Editor
         private const int TargetGridWidth = 3;
         private const int TargetGridDepth = 5;
 
-        [InitializeOnLoadMethod]
-        private static void QueueIntegration()
-        {
-            EditorApplication.delayCall += () =>
-            {
-                if (!EditorApplication.isPlayingOrWillChangePlaymode &&
-                    AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null)
-                {
-                    Integrate();
-                }
-            };
-        }
-
         [MenuItem("Tools/GameLab/Integrate Rules Into SampleScene Test")]
         public static void Integrate()
         {

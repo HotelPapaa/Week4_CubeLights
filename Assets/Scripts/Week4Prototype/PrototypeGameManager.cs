@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,6 +17,7 @@ namespace GameLab.Week4
         private DraggableCube selectedCube;
         private PuzzleStageDefinition currentStage;
         private LightSimulationResult lastLightResult;
+        private readonly HashSet<string> latchedLampKeys = new();
         private bool isDragging;
         private bool hasWon;
         private bool interactionEnabled = true;
@@ -54,6 +56,7 @@ namespace GameLab.Week4
         {
             currentStage = stage;
             lastLightResult = null;
+            latchedLampKeys.Clear();
             hasWon = false;
 
             if (lightVisualizer == null)
@@ -188,8 +191,8 @@ namespace GameLab.Week4
         }
 
         /// <summary>
-        /// 마우스로 큐브를 잡고 있는 동안 W/S는 기존 화면 기준 앞뒤 회전을 유지하고,
-        /// A/D는 보드의 수직축을 중심으로 좌우(횡 방향) 90도 회전한다.
+        /// 마우스로 큐브를 잡고 있는 동안 W/S는 화면 기준 앞뒤, A/D는 좌우로 90도 회전한다.
+        /// 카메라가 월드축과 비스듬해도 플레이어가 보는 방향과 입력 방향이 일치한다.
         /// </summary>
         private void HandleRotation()
         {
@@ -199,31 +202,53 @@ namespace GameLab.Week4
                 return;
             }
 
+            Vector3 cameraForward = Vector3.ProjectOnPlane(playerCamera.transform.forward, Vector3.up).normalized;
             Vector3 cameraRight = Vector3.ProjectOnPlane(playerCamera.transform.right, Vector3.up).normalized;
-            Vector3 boardUp = board != null ? board.transform.up : Vector3.up;
 
             // 카메라가 정확히 수직을 보는 예외에서도 회전축이 0이 되지 않게 월드축을 사용한다.
+            if (cameraForward.sqrMagnitude < 0.001f) cameraForward = Vector3.forward;
             if (cameraRight.sqrMagnitude < 0.001f) cameraRight = Vector3.right;
-            if (boardUp.sqrMagnitude < 0.001f) boardUp = Vector3.up;
 
             if (Keyboard.current.wKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, 90f);
             if (Keyboard.current.sKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, -90f);
-            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, -90f);
-            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, 90f);
+            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, 90f);
+            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, -90f);
         }
 
-        /// <summary>배치를 바꾸면 이전 점등 결과를 무효화한다.</summary>
+        /// <summary>배치를 바꾸면 광선 경로만 무효화하고 이미 켜진 전등 상태는 유지한다.</summary>
         private void InvalidateLightResult()
         {
             lastLightResult = null;
-            hasWon = false;
         }
 
         private void HandleLightSimulationStep(LightSimulationResult result)
         {
+            if (result != null)
+            {
+                foreach (LampLightResult lamp in result.Lamps)
+                {
+                    string key = BuildLampKey(lamp.Target);
+                    if (lamp.HasCorrectHit)
+                    {
+                        latchedLampKeys.Add(key);
+                    }
+
+                    if (latchedLampKeys.Contains(key))
+                    {
+                        lamp.LatchOn();
+                    }
+                }
+            }
+
             lastLightResult = result;
             hasWon = currentStage != null && currentStage.Matches(result);
             lightVisualizer?.ShowResult(result);
+        }
+
+        private static string BuildLampKey(LampTarget lamp)
+        {
+            return $"{lamp.gridPosition.x}:{lamp.gridPosition.y}:{lamp.gridPosition.z}:" +
+                   $"{(int)lamp.frontDirection}:{(int)lamp.requiredColor}";
         }
 
         /// <summary>프로토타입 조작법과 승리 상태를 별도 UI 애셋 없이 표시한다.</summary>

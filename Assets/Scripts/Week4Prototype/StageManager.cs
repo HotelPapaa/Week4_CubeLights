@@ -43,7 +43,12 @@ namespace GameLab.Week4
             LightingSequenceController lighting,
             GameObject originalCubeRoot)
         {
+            // ? 참일 때 값
+            // : 거짓일 때 값
+            // targetCampaign이 존재한다면 → campaign에 targetCampaign을 넣는다.
+            // targetCampaign이 null이라면 → 기존 campaign 값을 그대로 유지한다.
             campaign = targetCampaign != null ? targetCampaign : campaign;
+
             board = targetBoard;
             gameManager = manager;
             legacyCubeRoot = originalCubeRoot;

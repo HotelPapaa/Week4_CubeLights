@@ -107,7 +107,7 @@ namespace GameLab.Week4
 
             // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
             gameManager?.SetLightVisualizationVisible(true);
-            gameManager?.PrepareStageCamera(stageCamera);
+            // Stage Camera의 Transform과 Camera 설정은 씬에서 직접 조정한 값을 그대로 사용한다.
             SetCameraState(showStage: true);
             LightStateChanged?.Invoke(true);
             if (gameManager != null)

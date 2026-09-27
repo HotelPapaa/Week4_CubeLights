@@ -64,12 +64,6 @@ namespace GameLab.Week4.Editor
                 emissionColor: new Color(0.01f, 0.055f, 0.07f, 1f))
         };
 
-        [InitializeOnLoadMethod]
-        private static void QueueSetup()
-        {
-            EditorApplication.delayCall += SetupMaterials;
-        }
-
         [MenuItem("Tools/GameLab/Setup Cube Type Materials")]
         public static void SetupMaterials()
         {
@@ -111,7 +105,8 @@ namespace GameLab.Week4.Editor
             }
             else
             {
-                material.shader = shader;
+                // 기존 머티리얼은 사용자가 직접 조정한 색과 표면 설정을 보존한다.
+                return material;
             }
 
             material.SetColor("_BaseColor", spec.BaseColor);
