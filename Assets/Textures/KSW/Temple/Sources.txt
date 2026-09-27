@@ -1,0 +1,6 @@
+Poly Haven textures - CC0 1.0
+https://polyhaven.com/license
+Sandstone Blocks 08 - Rob Tuytel - https://polyhaven.com/a/sandstone_blocks_08
+Monastery Stone Floor - Amal Kumar - https://polyhaven.com/a/monastery_stone_floor
+White Plaster Rough 01 - Rob Tuytel - https://polyhaven.com/a/white_plaster_rough_01
+URP mask: R=metallic (0), G=AO, A=smoothness (1 - roughness).
