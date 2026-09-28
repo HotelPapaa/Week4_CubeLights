@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using Unity.Cinemachine;
 namespace GameLab.Week4
 {
     /// <summary>
@@ -19,6 +19,18 @@ namespace GameLab.Week4
         [SerializeField] private Camera playerCamera;
         [SerializeField] private Camera stageCamera;
         [SerializeField] private PrototypeGameManager gameManager;
+
+        [Header("시네머신 카메라들")]
+        [SerializeField] public CinemachineCamera defaultCamera;
+        [SerializeField] public CinemachineCamera StageCIneCamera;
+        [SerializeField] public CinemachineCamera RuleCamera;
+        [SerializeField] public CinemachineCamera RightCamera;
+        [SerializeField] public CinemachineCamera TopCamera;
+        [SerializeField] public CinemachineCamera LeftCamera;
+
+        private CinemachineCamera[] sceneCameras;
+        private CinemachineCamera currentCamera;
+        private int orbitCameraIndex;
 
         private InputAction turnOnLightAction;
         private bool ownsFallbackAction;
@@ -56,6 +68,36 @@ namespace GameLab.Week4
             ReleaseInputAction();
         }
 
+        private void Update()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null) return;
+
+            if (keyboard.rKey.wasPressedThisFrame)
+            {
+                int nextIndex = (orbitCameraIndex + 1) % 4;
+                CinemachineCamera nextCamera = nextIndex switch
+                {
+                    1 => RightCamera,
+                    2 => TopCamera,
+                    3 => LeftCamera,
+                    _ => defaultCamera
+                };
+                if (SelectCamera(nextCamera)) orbitCameraIndex = nextIndex;
+            }
+            else if (keyboard.tKey.wasPressedThisFrame)
+            {
+                if (RuleCamera != null && currentCamera == RuleCamera)
+                {
+                    SetCameraState(showStage: false);
+                }
+                else
+                {
+                    SelectCamera(RuleCamera);
+                }
+            }
+        }
+
         private void BindInputAction()
         {
             ReleaseInputAction();
@@ -86,6 +128,7 @@ namespace GameLab.Week4
 
         private void ApplyInitialState()
         {
+            ResolveSceneCameras();
             isLightOn = false;
             SetCameraState(showStage: false);
             gameManager?.SetLightVisualizationVisible(false);
@@ -96,9 +139,15 @@ namespace GameLab.Week4
         {
             if (!context.performed) return;
 
+            // 블렌드 도중에도 마지막으로 선택한 시점을 기준으로 토글한다.
+            bool isStageView = defaultCamera != null
+                ? StageCIneCamera != null && currentCamera == StageCIneCamera
+                : stageCamera != null && stageCamera.enabled;
+            SetCameraState(showStage: !isStageView);
+
             if (isLightOn)
             {
-                ReturnToPlayerView();
+                TurnOffLight();
                 return;
             }
 
@@ -108,8 +157,6 @@ namespace GameLab.Week4
 
             // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
             gameManager?.SetLightVisualizationVisible(true);
-            // Stage Camera의 Transform과 Camera 설정은 씬에서 직접 조정한 값을 그대로 사용한다.
-            SetCameraState(showStage: true);
             LightStateChanged?.Invoke(true);
             if (gameManager != null)
             {
@@ -121,12 +168,11 @@ namespace GameLab.Week4
             }
         }
 
-        private void ReturnToPlayerView()
+        private void TurnOffLight()
         {
             isLightOn = false;
             SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
-            SetCameraState(showStage: false);
             gameManager?.SetLightVisualizationVisible(false);
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
@@ -157,8 +203,69 @@ namespace GameLab.Week4
 
         private void SetCameraState(bool showStage)
         {
+            if (!showStage) orbitCameraIndex = 0;
+            if (defaultCamera != null)
+            {
+                SelectCamera(showStage ? StageCIneCamera : defaultCamera);
+                return;
+            }
+
+            // 시네머신을 사용하지 않는 기존 씬의 카메라 연결도 유지한다.
             SetSingleCameraState(playerCamera, !showStage);
             SetSingleCameraState(stageCamera, showStage);
+        }
+
+        private void ResolveSceneCameras()
+        {
+            // Inspector 할당을 우선하고, 비어 있는 슬롯만 현재 씬에서 연결한다.
+            foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+            {
+                foreach (CinemachineCamera camera in root.GetComponentsInChildren<CinemachineCamera>(true))
+                {
+                    switch (camera.name)
+                    {
+                        case "For MainCamera":
+                            if (defaultCamera == null) defaultCamera = camera;
+                            break;
+                        case "For Stag Camera":
+                            if (StageCIneCamera == null) StageCIneCamera = camera;
+                            break;
+                        case "Rule Camera":
+                            if (RuleCamera == null) RuleCamera = camera;
+                            break;
+                        case "Right Camera":
+                            if (RightCamera == null) RightCamera = camera;
+                            break;
+                        case "TOPCamera":
+                            if (TopCamera == null) TopCamera = camera;
+                            break;
+                        case "Left Camera":
+                            if (LeftCamera == null) LeftCamera = camera;
+                            break;
+                    }
+                }
+            }
+
+            sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera };
+        }
+
+        private bool SelectCamera(CinemachineCamera selectedCamera)
+        {
+            if (selectedCamera == null || playerCamera == null) return false;
+
+            // 모든 시점은 Player Camera의 Brain 하나로 출력한다.
+            // 별도의 Stage Camera를 켜면 시네머신 출력 위에 중복 렌더링된다.
+            SetSingleCameraState(stageCamera, false);
+            SetSingleCameraState(playerCamera, true);
+            selectedCamera.gameObject.SetActive(true);
+            selectedCamera.enabled = true;
+            foreach (CinemachineCamera camera in sceneCameras)
+            {
+                if (camera != null) camera.Priority = camera == selectedCamera ? 100 : 0;
+            }
+
+            currentCamera = selectedCamera;
+            return true;
         }
 
         private static void SetSingleCameraState(Camera camera, bool enabled)
