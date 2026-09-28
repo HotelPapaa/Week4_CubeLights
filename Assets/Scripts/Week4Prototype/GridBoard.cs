@@ -21,10 +21,100 @@ namespace GameLab.Week4
         [Min(0.1f)] [SerializeField] private float cubeHeight = 1f;
         [Min(0f)] [SerializeField] private float snapMargin = 0.45f;
 
+        [Header("빛 경로")]
+        [Tooltip("전등이나 큐브에 닿지 않고 격자를 벗어난 광선을 진행 방향으로 더 표시할 칸 수")]
+        [Min(1)] [SerializeField] private int escapedBeamExtensionCells = 6;
+
         // 좌표별 스택을 분리해 높이 제한 없이 큐브를 쌓는다.
         private readonly Dictionary<Vector2Int, List<DraggableCube>> stacks = new();
         private readonly Dictionary<Vector3Int, DraggableCube> externalCubes = new();
         private Coroutine lightEffectCoroutine;
+
+        private readonly struct LightEmitterRay
+        {
+            public readonly Vector3Int Origin;
+            public readonly Vector3Int Direction;
+            public readonly PuzzleLightColor Color;
+
+            public LightEmitterRay(Vector3Int origin, Vector3Int direction, PuzzleLightColor color)
+            {
+                Origin = origin;
+                Direction = direction;
+                Color = color;
+            }
+        }
+
+        /// <summary>
+        /// 한 분배기에 실제로 들어온 포트별 RGB 채널을 모은다.
+        /// 광선 순서와 관계없이 모든 입력을 먼저 합친 뒤 분배기 출력을 계산하기 위한 상태다.
+        /// </summary>
+        private sealed class SplitterInputState
+        {
+            private readonly Dictionary<Vector3Int, int> colorMasksByPort = new();
+            private bool hasAccumulatedColor;
+
+            public int InputPortCount => colorMasksByPort.Count;
+
+            public PuzzleLightColor MixedColor
+            {
+                get
+                {
+                    int mixedMask = 0;
+                    foreach (int colorMask in colorMasksByPort.Values)
+                    {
+                        mixedMask |= colorMask;
+                    }
+
+                    return LightDirectionUtility.FromAdditiveMask(mixedMask);
+                }
+            }
+
+            public bool HasAccumulatedColor => hasAccumulatedColor;
+
+            public void Register(
+                Vector3Int incomingTravelDirection,
+                PuzzleLightColor color,
+                bool inputHasAccumulatedColor)
+            {
+                Vector3Int inputPort = -incomingTravelDirection;
+                int colorMask = LightDirectionUtility.ToAdditiveMask(color);
+                if (colorMasksByPort.TryGetValue(inputPort, out int currentMask))
+                {
+                    colorMasksByPort[inputPort] = currentMask | colorMask;
+                }
+                else
+                {
+                    colorMasksByPort.Add(inputPort, colorMask);
+                }
+
+                hasAccumulatedColor |= inputHasAccumulatedColor;
+            }
+
+            public bool HasInputAt(Vector3Int portDirection)
+            {
+                return colorMasksByPort.ContainsKey(portDirection);
+            }
+
+            public bool HasSameInputs(SplitterInputState other)
+            {
+                if (other == null || hasAccumulatedColor != other.hasAccumulatedColor ||
+                    colorMasksByPort.Count != other.colorMasksByPort.Count)
+                {
+                    return false;
+                }
+
+                foreach (KeyValuePair<Vector3Int, int> pair in colorMasksByPort)
+                {
+                    if (!other.colorMasksByPort.TryGetValue(pair.Key, out int otherMask) ||
+                        pair.Value != otherMask)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
 
         public int Width => width;
         public int Depth => depth;
@@ -325,6 +415,33 @@ namespace GameLab.Week4
                 verticalLimit = Mathf.Max(verticalLimit, lamp.Target.gridPosition.y + 2);
             }
 
+            List<LightEmitterRay> emitters = CollectEmitterRays();
+            Dictionary<Vector3Int, SplitterInputState> splitterStates =
+                ResolveSplitterInputs(emitters, verticalLimit, result);
+            var emittedSplitters = new HashSet<Vector3Int>();
+
+            foreach (LightEmitterRay emitter in emitters)
+            {
+                TraceBeam(
+                    emitter.Origin,
+                    emitter.Direction,
+                    emitter.Color,
+                    verticalLimit,
+                    result,
+                    null,
+                    emitter.Color != PuzzleLightColor.White,
+                    splitterStates,
+                    null,
+                    emittedSplitters,
+                    true);
+            }
+
+            return result;
+        }
+
+        private List<LightEmitterRay> CollectEmitterRays()
+        {
+            var emitters = new List<LightEmitterRay>();
             foreach (KeyValuePair<Vector2Int, List<DraggableCube>> pair in stacks)
             {
                 for (int level = 0; level < pair.Value.Count; level++)
@@ -336,16 +453,10 @@ namespace GameLab.Week4
                         continue;
                     }
 
-                    Vector3Int origin = new(pair.Key.x, level, pair.Key.y);
-                    Vector3Int direction = properties.GetEmitterDirection(transform);
-                    TraceBeam(
-                        origin,
-                        direction,
-                        properties.LightColor,
-                        verticalLimit,
-                        result,
-                        null,
-                        properties.LightColor != PuzzleLightColor.White);
+                    emitters.Add(new LightEmitterRay(
+                        new Vector3Int(pair.Key.x, level, pair.Key.y),
+                        properties.GetEmitterDirection(transform),
+                        properties.LightColor));
                 }
             }
 
@@ -360,17 +471,75 @@ namespace GameLab.Week4
                     continue;
                 }
 
-                TraceBeam(
+                emitters.Add(new LightEmitterRay(
                     pair.Key,
                     properties.GetEmitterDirection(transform),
-                    properties.LightColor,
-                    verticalLimit,
-                    result,
-                    null,
-                    properties.LightColor != PuzzleLightColor.White);
+                    properties.LightColor));
             }
 
-            return result;
+            return emitters;
+        }
+
+        /// <summary>
+        /// 분배기 출력이 다음 분배기의 입력이 될 수 있으므로 입력 상태가 더 이상 바뀌지 않을 때까지
+        /// 결과를 기록하지 않는 예비 계산을 반복한다. 최종 표시에서는 확정된 혼합색만 사용한다.
+        /// </summary>
+        private Dictionary<Vector3Int, SplitterInputState> ResolveSplitterInputs(
+            List<LightEmitterRay> emitters,
+            int verticalLimit,
+            LightSimulationResult result)
+        {
+            var resolvedStates = new Dictionary<Vector3Int, SplitterInputState>();
+            int maximumPasses = Mathf.Max(4, width * depth * Mathf.Max(1, verticalLimit));
+
+            for (int pass = 0; pass < maximumPasses; pass++)
+            {
+                var observedStates = new Dictionary<Vector3Int, SplitterInputState>();
+                var emittedSplitters = new HashSet<Vector3Int>();
+
+                foreach (LightEmitterRay emitter in emitters)
+                {
+                    TraceBeam(
+                        emitter.Origin,
+                        emitter.Direction,
+                        emitter.Color,
+                        verticalLimit,
+                        result,
+                        null,
+                        emitter.Color != PuzzleLightColor.White,
+                        resolvedStates,
+                        observedStates,
+                        emittedSplitters,
+                        false);
+                }
+
+                if (HaveSameSplitterStates(resolvedStates, observedStates))
+                {
+                    return observedStates;
+                }
+
+                resolvedStates = observedStates;
+            }
+
+            return resolvedStates;
+        }
+
+        private static bool HaveSameSplitterStates(
+            Dictionary<Vector3Int, SplitterInputState> first,
+            Dictionary<Vector3Int, SplitterInputState> second)
+        {
+            if (first.Count != second.Count) return false;
+
+            foreach (KeyValuePair<Vector3Int, SplitterInputState> pair in first)
+            {
+                if (!second.TryGetValue(pair.Key, out SplitterInputState otherState) ||
+                    !pair.Value.HasSameInputs(otherState))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -451,7 +620,11 @@ namespace GameLab.Week4
             int verticalLimit,
             LightSimulationResult result,
             HashSet<string> sharedVisited = null,
-            bool hasAccumulatedColor = false)
+            bool hasAccumulatedColor = false,
+            Dictionary<Vector3Int, SplitterInputState> resolvedSplitterStates = null,
+            Dictionary<Vector3Int, SplitterInputState> observedSplitterStates = null,
+            HashSet<Vector3Int> emittedSplitters = null,
+            bool recordResult = true)
         {
             if (initialDirection == Vector3Int.zero) return;
 
@@ -473,19 +646,34 @@ namespace GameLab.Week4
                 if (!visited.Add(state)) return;
 
                 Vector3Int next = position + direction;
-                result.Segments.Add(new LightBeamSegment(position, next, color));
+                if (recordResult)
+                {
+                    result.Segments.Add(new LightBeamSegment(position, next, color));
+                }
 
                 bool reachedLamp = false;
                 foreach (LampLightResult lamp in result.Lamps)
                 {
                     if (lamp.Target.gridPosition != next) continue;
-                    lamp.RegisterHit(direction, color);
+                    if (recordResult)
+                    {
+                        lamp.RegisterHit(direction, color);
+                    }
                     reachedLamp = true;
                 }
 
                 if (reachedLamp) return;
                 if (!IsLightCoordinateInsideBoard(next, verticalLimit) &&
-                    !externalCubes.ContainsKey(next)) return;
+                    !externalCubes.ContainsKey(next))
+                {
+                    // 빗나간 광선도 격자 경계에서 갑자기 끊지 않고 진행 방향으로 화면 밖까지 보낸다.
+                    Vector3Int extendedEnd = next + direction * Mathf.Max(1, escapedBeamExtensionCells);
+                    if (recordResult)
+                    {
+                        result.Segments.Add(new LightBeamSegment(next, extendedEnd, color));
+                    }
+                    return;
+                }
 
                 DraggableCube hitCube = GetCubeAt(next);
                 if (hitCube == null)
@@ -497,7 +685,7 @@ namespace GameLab.Week4
                 PuzzleCubeProperties properties = hitCube.GetComponent<PuzzleCubeProperties>();
                 if (properties == null) return;
 
-                if (properties.MeltsInLight)
+                if (recordResult && properties.MeltsInLight)
                 {
                     result.IlluminatedIce.Add(properties);
                 }
@@ -526,35 +714,125 @@ namespace GameLab.Week4
                 }
 
                 if (properties.SplitsLight &&
-                    properties.TryGetSplitDirections(
-                        direction,
-                        transform,
-                        out Vector3Int splitDirectionA,
-                        out Vector3Int splitDirectionB))
+                    properties.TryGetSplitDirections(direction, transform, out _, out _))
                 {
-                    // 두 갈래가 같은 상태로 다시 합쳐지거나 순환하면 한 번만 계산한다.
-                    TraceBeam(
+                    RegisterSplitterInput(
+                        observedSplitterStates,
                         next,
-                        splitDirectionA,
+                        direction,
                         color,
-                        verticalLimit,
-                        result,
-                        visited,
                         hasAccumulatedColor);
-                    TraceBeam(
-                        next,
-                        splitDirectionB,
-                        color,
-                        verticalLimit,
-                        result,
-                        visited,
-                        hasAccumulatedColor);
+
+                    // 같은 분배기는 모든 입사광의 색을 먼저 합친 뒤 한 번만 출력한다.
+                    if (resolvedSplitterStates == null ||
+                        !resolvedSplitterStates.TryGetValue(next, out SplitterInputState splitterState) ||
+                        emittedSplitters == null || !emittedSplitters.Add(next))
+                    {
+                        return;
+                    }
+
+                    int outputCount = GetSplitterOutputs(
+                        properties,
+                        splitterState,
+                        out Vector3Int splitDirectionA,
+                        out Vector3Int splitDirectionB);
+                    PuzzleLightColor mixedColor = splitterState.MixedColor;
+
+                    if (outputCount >= 1)
+                    {
+                        TraceBeam(
+                            next,
+                            splitDirectionA,
+                            mixedColor,
+                            verticalLimit,
+                            result,
+                            visited,
+                            splitterState.HasAccumulatedColor,
+                            resolvedSplitterStates,
+                            observedSplitterStates,
+                            emittedSplitters,
+                            recordResult);
+                    }
+
+                    if (outputCount >= 2)
+                    {
+                        TraceBeam(
+                            next,
+                            splitDirectionB,
+                            mixedColor,
+                            verticalLimit,
+                            result,
+                            visited,
+                            splitterState.HasAccumulatedColor,
+                            resolvedSplitterStates,
+                            observedSplitterStates,
+                            emittedSplitters,
+                            recordResult);
+                    }
+
                     return;
                 }
 
                 // 일반, 바사삭, 스티로폼, 발광 및 빛 분기 큐브의 다른 면은 모두 빛을 차단한다.
                 return;
             }
+        }
+
+        private static void RegisterSplitterInput(
+            Dictionary<Vector3Int, SplitterInputState> states,
+            Vector3Int splitterPosition,
+            Vector3Int incomingTravelDirection,
+            PuzzleLightColor color,
+            bool hasAccumulatedColor)
+        {
+            if (states == null) return;
+
+            if (!states.TryGetValue(splitterPosition, out SplitterInputState state))
+            {
+                state = new SplitterInputState();
+                states.Add(splitterPosition, state);
+            }
+
+            state.Register(incomingTravelDirection, color, hasAccumulatedColor);
+        }
+
+        /// <summary>
+        /// 한 포트로 들어오면 나머지 두 포트로 분배하고, 두 포트로 들어오면 색을 합쳐 남은 한 포트로 보낸다.
+        /// 세 포트 모두 입력이면 남은 출구가 없으므로 빛을 내보내지 않는다.
+        /// </summary>
+        private int GetSplitterOutputs(
+            PuzzleCubeProperties properties,
+            SplitterInputState state,
+            out Vector3Int outputA,
+            out Vector3Int outputB)
+        {
+            outputA = Vector3Int.zero;
+            outputB = Vector3Int.zero;
+            if (state == null ||
+                !properties.TryGetSplitterPorts(transform, out Vector3Int portA, out Vector3Int portB, out Vector3Int portC))
+            {
+                return 0;
+            }
+
+            int outputCount = 0;
+            AddSplitterOutputIfFree(state, portA, ref outputCount, ref outputA, ref outputB);
+            AddSplitterOutputIfFree(state, portB, ref outputCount, ref outputA, ref outputB);
+            AddSplitterOutputIfFree(state, portC, ref outputCount, ref outputA, ref outputB);
+            return outputCount;
+        }
+
+        private static void AddSplitterOutputIfFree(
+            SplitterInputState state,
+            Vector3Int port,
+            ref int outputCount,
+            ref Vector3Int outputA,
+            ref Vector3Int outputB)
+        {
+            if (state.HasInputAt(port)) return;
+
+            if (outputCount == 0) outputA = port;
+            else if (outputCount == 1) outputB = port;
+            outputCount++;
         }
 
         private void ResolveBrittleImpact(List<DraggableCube> stack, int fallingIndex)

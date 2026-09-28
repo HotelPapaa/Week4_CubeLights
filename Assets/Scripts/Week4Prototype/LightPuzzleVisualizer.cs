@@ -205,6 +205,15 @@ namespace GameLab.Week4
             }
         }
 
+        /// <summary>이전 점등 결과와 광선을 지우고 모든 목표 전등을 꺼진 색으로 되돌린다.</summary>
+        public void ResetLightAttempt()
+        {
+            lastResult = null;
+            EnsureRoots();
+            ClearBeamVisuals();
+            SetBeamsVisible(false);
+        }
+
         /// <summary>Stage Camera가 기존 그림자 벽 대신 새 5x3 전등판과 광선을 바라보게 한다.</summary>
         public void FocusStageCamera(Camera stageCamera)
         {

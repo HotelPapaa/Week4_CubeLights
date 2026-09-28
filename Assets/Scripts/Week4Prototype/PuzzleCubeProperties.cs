@@ -143,11 +143,7 @@ namespace GameLab.Week4
             out Vector3Int outputA,
             out Vector3Int outputB)
         {
-            // 기존 프리팝과 스테이지의 직렬화 데이터를 보존하기 위해 필드 이름은 유지하지만,
-            // 규칙상 세 방향은 모두 동등한 양방향 포트로 취급한다.
-            Vector3Int portA = TransformLocalDirection(splitterInputLocal, boardTransform);
-            Vector3Int portB = TransformLocalDirection(splitterOutputALocal, boardTransform);
-            Vector3Int portC = TransformLocalDirection(splitterOutputBLocal, boardTransform);
+            TryGetSplitterPorts(boardTransform, out Vector3Int portA, out Vector3Int portB, out Vector3Int portC);
             Vector3Int entryFace = -incomingTravelDirection;
             outputA = Vector3Int.zero;
             outputB = Vector3Int.zero;
@@ -180,6 +176,24 @@ namespace GameLab.Week4
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 분배기의 세 포트를 보드 기준 방향으로 반환한다.
+        /// 세 포트는 입력/출력으로 고정되지 않으며 빛이 들어오는 순간의 입사 포트만 입력이 된다.
+        /// </summary>
+        public bool TryGetSplitterPorts(
+            Transform boardTransform,
+            out Vector3Int portA,
+            out Vector3Int portB,
+            out Vector3Int portC)
+        {
+            // 기존 프리팹과 스테이지의 직렬화 데이터를 보존하기 위해 필드 이름은 유지한다.
+            portA = TransformLocalDirection(splitterInputLocal, boardTransform);
+            portB = TransformLocalDirection(splitterOutputALocal, boardTransform);
+            portC = TransformLocalDirection(splitterOutputBLocal, boardTransform);
+            return portA != Vector3Int.zero && portB != Vector3Int.zero && portC != Vector3Int.zero &&
+                   portA != portB && portA != portC && portB != portC;
         }
 
         /// <summary>바사삭 큐브를 격자에서 제거하고 시각 오브젝트도 숨긴다.</summary>
