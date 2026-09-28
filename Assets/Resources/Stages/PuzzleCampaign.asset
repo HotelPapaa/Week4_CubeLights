@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PuzzleCampaign
   m_EditorClassIdentifier: 
   stages:
+  - {fileID: 11400000, guid: 5ef7fd37b1fb33242bf7b4dab5eefa90, type: 2}
   - {fileID: 11400000, guid: b45afb5760076be4aaec2cd1e4076abe, type: 2}
   - {fileID: 11400000, guid: c3011111111141118111111111111111, type: 2}
   - {fileID: 11400000, guid: c3022222222242228222222222222222, type: 2}
