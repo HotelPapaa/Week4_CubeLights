@@ -185,6 +185,7 @@ namespace GameLab.Week4
         /// <summary>바사삭 큐브를 격자에서 제거하고 시각 오브젝트도 숨긴다.</summary>
         public void Break()
         {
+            SoundManager.Play(SoundEventId.BrittleBreak, transform.position);
             RemoveFromPuzzle();
         }
 
@@ -192,6 +193,7 @@ namespace GameLab.Week4
         public void BreakAfterBoardDetach()
         {
             if (removedByRule) return;
+            SoundManager.Play(SoundEventId.BrittleBreak, transform.position);
             removedByRule = true;
             gameObject.SetActive(false);
         }
@@ -201,6 +203,7 @@ namespace GameLab.Week4
         {
             if (cubeType == PuzzleCubeType.Ice)
             {
+                SoundManager.Play(SoundEventId.IceMelt, transform.position);
                 RemoveFromPuzzle(animateCollapse: true);
             }
         }

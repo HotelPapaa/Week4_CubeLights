@@ -103,6 +103,7 @@ namespace GameLab.Week4
             }
 
             isLightOn = true;
+            SoundManager.Play(SoundEventId.LightOn);
             gameManager?.SetInteractionEnabled(false);
 
             // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
@@ -123,6 +124,7 @@ namespace GameLab.Week4
         private void ReturnToPlayerView()
         {
             isLightOn = false;
+            SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
             SetCameraState(showStage: false);
             gameManager?.SetLightVisualizationVisible(false);
@@ -133,7 +135,12 @@ namespace GameLab.Week4
         /// <summary>스테이지 로드·재시작 시 점등 여부와 관계없이 조작 화면으로 복귀한다.</summary>
         public void ResetToPlayerView()
         {
+            bool wasLightOn = isLightOn;
             isLightOn = false;
+            if (wasLightOn)
+            {
+                SoundManager.Play(SoundEventId.LightOff);
+            }
             gameManager?.CancelLightEffects();
             SetCameraState(showStage: false);
             gameManager?.SetLightVisualizationVisible(false);

@@ -70,6 +70,7 @@ namespace GameLab.Week4
         {
             if (interactionLocked) return;
             ResolveBoardReference();
+            SoundManager.Play(SoundEventId.CubePickup, transform.position);
 
             // 원위치로 복귀하던 중 다시 잡으면 현재 위치에서 즉시 드래그를 이어 간다.
             if (returnCoroutine != null)
@@ -110,6 +111,7 @@ namespace GameLab.Week4
                 Cell = targetCell;
                 IsPlaced = true;
                 SnapImmediately(board.PlaceCube(this, targetCell));
+                SoundManager.Play(SoundEventId.CubePlace, transform.position);
                 return true;
             }
 
@@ -129,6 +131,7 @@ namespace GameLab.Week4
             // 월드축 회전을 기존 목표에 누적해 빠르게 연속 입력해도 정확한 90도 배수를 유지한다.
             Quaternion delta = Quaternion.AngleAxis(degrees, axis.normalized);
             targetRotation = delta * targetRotation;
+            SoundManager.Play(SoundEventId.CubeRotate, transform.position);
 
             if (rotationCoroutine != null)
             {
@@ -158,6 +161,7 @@ namespace GameLab.Week4
                 StopCoroutine(fallCoroutine);
             }
 
+            SoundManager.Play(SoundEventId.CubeFall, transform.position);
             fallCoroutine = StartCoroutine(AnimateFall(transform.position, worldPosition, duration));
         }
 
@@ -186,6 +190,7 @@ namespace GameLab.Week4
         private void ReturnHome()
         {
             IsPlaced = false;
+            SoundManager.Play(SoundEventId.CubeReturn, transform.position);
 
             if (returnCoroutine != null)
             {
@@ -249,6 +254,7 @@ namespace GameLab.Week4
             if (duration <= 0f)
             {
                 transform.position = endPosition;
+                SoundManager.Play(SoundEventId.CubeLand, transform.position);
                 fallCoroutine = null;
                 yield break;
             }
@@ -264,6 +270,7 @@ namespace GameLab.Week4
             }
 
             transform.position = endPosition;
+            SoundManager.Play(SoundEventId.CubeLand, transform.position);
             fallCoroutine = null;
         }
     }

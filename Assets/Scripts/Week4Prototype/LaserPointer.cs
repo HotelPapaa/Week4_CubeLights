@@ -24,10 +24,12 @@ namespace GameLab.Week4
 
         private readonly List<GameObject> spawnedLasers = new();
         private readonly List<Material> runtimeMaterials = new();
+        private readonly HashSet<Vector3Int> soundedInteractionCells = new();
         private GridBoard board;
         private Transform laserRoot;
         private Coroutine shootCoroutine;
         private Func<LightBeamSegment, Vector3> resolveEndPosition;
+        private SoundHandle laserSoundHandle;
 
         public bool CanRender => board != null && laserRoot != null && laserPrefab != null;
 
@@ -50,7 +52,11 @@ namespace GameLab.Week4
             if (!CanRender || route == null || route.Count == 0) return;
 
             resolveEndPosition = endPositionResolver;
+            soundedInteractionCells.Clear();
             laserRoot.gameObject.SetActive(true);
+            laserSoundHandle = SoundManager.Play(
+                SoundEventId.LaserLoop,
+                board.GridToWorld(route[0].From));
             shootCoroutine = StartCoroutine(ShootLaser(route));
         }
 
@@ -64,6 +70,7 @@ namespace GameLab.Week4
             if (!visible)
             {
                 StopPlayback();
+                StopLaserSound();
             }
         }
 
@@ -91,12 +98,22 @@ namespace GameLab.Week4
             }
 
             runtimeMaterials.Clear();
+            soundedInteractionCells.Clear();
             resolveEndPosition = null;
+            StopLaserSound();
         }
 
         private void OnDestroy()
         {
             StopPlayback();
+            StopLaserSound();
+        }
+
+        private void StopLaserSound()
+        {
+            if (!laserSoundHandle.IsValid) return;
+            SoundManager.Stop(laserSoundHandle);
+            laserSoundHandle = SoundHandle.Invalid;
         }
 
         private void StopPlayback()
@@ -149,6 +166,8 @@ namespace GameLab.Week4
             float distance = displacement.magnitude;
             if (distance <= Mathf.Epsilon) yield break;
 
+            PlayInteractionSound(segment);
+
             GameObject laserObject = Instantiate(laserPrefab, laserRoot);
             laserObject.name =
                 $"Laser_{segment.From.x}_{segment.From.y}_{segment.From.z}_" +
@@ -181,6 +200,27 @@ namespace GameLab.Week4
             }
 
             laserTransform.localScale = new Vector3(baseScale.x, targetScaleY, baseScale.z);
+        }
+
+        /// <summary>광선 애니메이션이 해당 큐브에 도달한 순간 굴절·분기·색 변환음을 한 번만 재생한다.</summary>
+        private void PlayInteractionSound(LightBeamSegment segment)
+        {
+            if (!soundedInteractionCells.Add(segment.From)) return;
+
+            DraggableCube cube = board.GetCubeAt(segment.From);
+            if (cube == null || !cube.TryGetComponent(out PuzzleCubeProperties properties)) return;
+
+            SoundEventId eventId = properties.CubeType switch
+            {
+                PuzzleCubeType.Refractor => SoundEventId.LightRefract,
+                PuzzleCubeType.LightSplitter => SoundEventId.LightSplit,
+                PuzzleCubeType.ColoredGlass => SoundEventId.LightColorChange,
+                _ => SoundEventId.None
+            };
+            if (eventId != SoundEventId.None)
+            {
+                SoundManager.Play(eventId, board.GridToWorld(segment.From));
+            }
         }
 
         private void ConfigureRenderers(GameObject laserObject, Color color)

@@ -228,6 +228,7 @@ namespace GameLab.Week4
 
         private void HandleLightSimulationStep(LightSimulationResult result)
         {
+            bool wasWon = hasWon;
             if (result != null)
             {
                 foreach (LampLightResult lamp in result.Lamps)
@@ -235,7 +236,10 @@ namespace GameLab.Week4
                     string key = BuildLampKey(lamp.Target);
                     if (lamp.HasCorrectHit)
                     {
-                        latchedLampKeys.Add(key);
+                        if (latchedLampKeys.Add(key))
+                        {
+                            SoundManager.Play(SoundEventId.LampOn);
+                        }
                     }
 
                     if (latchedLampKeys.Contains(key))
@@ -247,6 +251,10 @@ namespace GameLab.Week4
 
             lastLightResult = result;
             hasWon = currentStage != null && currentStage.Matches(result);
+            if (!wasWon && hasWon)
+            {
+                SoundManager.Play(SoundEventId.PuzzleSolved);
+            }
             lightVisualizer?.ShowResult(result);
         }
 
