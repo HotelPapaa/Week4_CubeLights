@@ -28,6 +28,7 @@ namespace GameLab.Week4
         [SerializeField] public CinemachineCamera TopCamera;
         [SerializeField] public CinemachineCamera LeftCamera;
 
+
         private CinemachineCamera[] sceneCameras;
         private CinemachineCamera currentCamera;
         private int orbitCameraIndex;
@@ -249,7 +250,7 @@ namespace GameLab.Week4
             sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera };
         }
 
-        private bool SelectCamera(CinemachineCamera selectedCamera)
+        public bool SelectCamera(CinemachineCamera selectedCamera)
         {
             if (selectedCamera == null || playerCamera == null) return false;
 
