@@ -258,8 +258,11 @@ namespace GameLab.Week4
             return color switch
             {
                 PuzzleLightColor.Red => "빨강",
+                PuzzleLightColor.Green => "초록",
                 PuzzleLightColor.Blue => "파랑",
                 PuzzleLightColor.Yellow => "노랑",
+                PuzzleLightColor.Cyan => "청록",
+                PuzzleLightColor.Magenta => "자홍",
                 _ => "흰색"
             };
         }

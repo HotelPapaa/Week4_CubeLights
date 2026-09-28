@@ -41,11 +41,11 @@ namespace GameLab.Week4
         [SerializeField] private Vector3Int refractorPortALocal = new(0, 0, -1);
         [Tooltip("굴절 큐브의 두 번째 구멍이 바라보는 로컬 방향")]
         [SerializeField] private Vector3Int refractorPortBLocal = new(1, 0, 0);
-        [Tooltip("빛 분기 큐브가 빛을 받는 로컬 입력 면")]
+        [Tooltip("빛 분기 큐브의 첫 번째 로컬 포트 방향")]
         [SerializeField] private Vector3Int splitterInputLocal = new(1, 0, 0);
-        [Tooltip("빛 분기 큐브의 첫 번째 로컬 출력 방향")]
+        [Tooltip("빛 분기 큐브의 두 번째 로컬 포트 방향")]
         [SerializeField] private Vector3Int splitterOutputALocal = new(0, 0, -1);
-        [Tooltip("빛 분기 큐브의 두 번째 로컬 출력 방향")]
+        [Tooltip("빛 분기 큐브의 세 번째 로컬 포트 방향")]
         [SerializeField] private Vector3Int splitterOutputBLocal = new(0, 0, 1);
 
         private DraggableCube draggableCube;
@@ -134,8 +134,8 @@ namespace GameLab.Week4
         }
 
         /// <summary>
-        /// 지정된 입력 면으로 빛이 들어오면 같은 색의 빛을 두 출력 방향으로 복제한다.
-        /// 입력 면이 아닌 곳에 닿은 빛은 분기되지 않고 차단된다.
+        /// 세 포트 중 하나로 빛이 들어오면 같은 색의 빛을 나머지 두 포트로 복제한다.
+        /// 포트가 아닌 면에 닿은 빛은 분기되지 않고 차단된다.
         /// </summary>
         public bool TryGetSplitDirections(
             Vector3Int incomingTravelDirection,
@@ -143,15 +143,43 @@ namespace GameLab.Week4
             out Vector3Int outputA,
             out Vector3Int outputB)
         {
-            Vector3Int inputFace = TransformLocalDirection(splitterInputLocal, boardTransform);
+            // 기존 프리팝과 스테이지의 직렬화 데이터를 보존하기 위해 필드 이름은 유지하지만,
+            // 규칙상 세 방향은 모두 동등한 양방향 포트로 취급한다.
+            Vector3Int portA = TransformLocalDirection(splitterInputLocal, boardTransform);
+            Vector3Int portB = TransformLocalDirection(splitterOutputALocal, boardTransform);
+            Vector3Int portC = TransformLocalDirection(splitterOutputBLocal, boardTransform);
             Vector3Int entryFace = -incomingTravelDirection;
-            outputA = TransformLocalDirection(splitterOutputALocal, boardTransform);
-            outputB = TransformLocalDirection(splitterOutputBLocal, boardTransform);
+            outputA = Vector3Int.zero;
+            outputB = Vector3Int.zero;
 
-            return entryFace == inputFace &&
-                   outputA != Vector3Int.zero &&
-                   outputB != Vector3Int.zero &&
-                   outputA != outputB;
+            if (portA == Vector3Int.zero || portB == Vector3Int.zero || portC == Vector3Int.zero ||
+                portA == portB || portA == portC || portB == portC)
+            {
+                return false;
+            }
+
+            if (entryFace == portA)
+            {
+                outputA = portB;
+                outputB = portC;
+                return true;
+            }
+
+            if (entryFace == portB)
+            {
+                outputA = portA;
+                outputB = portC;
+                return true;
+            }
+
+            if (entryFace == portC)
+            {
+                outputA = portA;
+                outputB = portB;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>바사삭 큐브를 격자에서 제거하고 시각 오브젝트도 숨긴다.</summary>

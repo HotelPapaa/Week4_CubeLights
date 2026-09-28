@@ -53,6 +53,8 @@ namespace GameLab.Week4.Editor
                 new Color(0f, 0.018f, 0.08f, 1f)),
             new MaterialSpec("ColoredGlass_Red", "M_Cube_ColoredGlass_Red", new Color(1f, 0.1f, 0.07f, 0.43f), 0.08f, 0.92f, true,
                 new Color(0.09f, 0.004f, 0.002f, 1f)),
+            new MaterialSpec("ColoredGlass_Green", "M_Cube_ColoredGlass_Green", new Color(0.08f, 0.9f, 0.2f, 0.43f), 0.08f, 0.92f, true,
+                new Color(0.002f, 0.075f, 0.008f, 1f)),
             new MaterialSpec("ColoredGlass_Yellow", "M_Cube_ColoredGlass_Yellow", new Color(1f, 0.72f, 0.05f, 0.43f), 0.08f, 0.92f, true,
                 new Color(0.08f, 0.04f, 0.001f, 1f)),
             new MaterialSpec("Ice", "M_Cube_Ice", new Color(0.45f, 0.78f, 1f, 0.7f), 0f, 0.88f, true,
