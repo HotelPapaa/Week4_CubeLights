@@ -84,17 +84,22 @@ namespace GameLab.Week4
                     3 => LeftCamera,
                     _ => defaultCamera
                 };
-                if (SelectCamera(nextCamera)) orbitCameraIndex = nextIndex;
+                if (SelectCamera(nextCamera))
+                {
+                    SoundManager.Play(SoundEventId.UiClick);
+                    orbitCameraIndex = nextIndex;
+                }
             }
             else if (keyboard.tKey.wasPressedThisFrame)
             {
                 if (RuleCamera != null && currentCamera == RuleCamera)
                 {
+                    SoundManager.Play(SoundEventId.UiClick);
                     SetCameraState(showStage: false);
                 }
-                else
+                else if (SelectCamera(RuleCamera))
                 {
-                    SelectCamera(RuleCamera);
+                    SoundManager.Play(SoundEventId.UiClick);
                 }
             }
         }
@@ -140,6 +145,9 @@ namespace GameLab.Week4
         {
             if (!context.performed) return;
 
+            // Space 입력을 받은 프레임에 토글 결과에 맞는 사운드를 먼저 요청한다.
+            SoundManager.Play(isLightOn ? SoundEventId.LightOff : SoundEventId.LightOn);
+
             // 블렌드 도중에도 마지막으로 선택한 시점을 기준으로 토글한다.
             bool isStageView = defaultCamera != null
                 ? StageCIneCamera != null && currentCamera == StageCIneCamera
@@ -153,7 +161,6 @@ namespace GameLab.Week4
             }
 
             isLightOn = true;
-            SoundManager.Play(SoundEventId.LightOn);
             gameManager?.SetInteractionEnabled(false);
 
             // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
@@ -172,7 +179,6 @@ namespace GameLab.Week4
         private void TurnOffLight()
         {
             isLightOn = false;
-            SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
             gameManager?.SetLightVisualizationVisible(false);
             gameManager?.SetInteractionEnabled(true);

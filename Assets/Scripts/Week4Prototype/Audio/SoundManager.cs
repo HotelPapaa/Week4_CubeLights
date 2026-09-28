@@ -23,7 +23,8 @@ namespace GameLab.Week4
             public int ClipIndex = -1;
             public float BaseVolume;
             public float StartedAt;
-            public float ExpectedEndTime;
+            public double ScheduledStartDspTime;
+            public double ExpectedEndDspTime;
             public Coroutine FadeCoroutine;
         }
 
@@ -76,7 +77,19 @@ namespace GameLab.Week4
         /// <summary>효과음과 반복음을 동일한 API로 요청한다.</summary>
         public static SoundHandle Play(SoundEventId eventId, Vector3? worldPosition = null)
         {
-            return Instance.PlayInternal(eventId, worldPosition);
+            return Instance.PlayInternal(eventId, worldPosition, null);
+        }
+
+        /// <summary>
+        /// 여러 연출이나 사운드를 같은 DSP 기준 시각에 맞춰 재생한다.
+        /// Catalog의 Sync Delay는 기준 시각에 추가 보정값으로 적용된다.
+        /// </summary>
+        public static SoundHandle PlayScheduled(
+            SoundEventId eventId,
+            double syncDspTime,
+            Vector3? worldPosition = null)
+        {
+            return Instance.PlayInternal(eventId, worldPosition, syncDspTime);
         }
 
         /// <summary>핸들이 가리키는 재생을 Catalog의 페이드 아웃 시간으로 멈춘다.</summary>
@@ -130,7 +143,7 @@ namespace GameLab.Week4
 
         private void Update()
         {
-            float now = Time.unscaledTime;
+            double now = AudioSettings.dspTime;
             ReleaseCompletedVoice(bgmVoice, now);
             ReleaseCompletedVoice(ambienceVoice, now);
             foreach (Voice voice in sfxVoices)
@@ -141,14 +154,14 @@ namespace GameLab.Week4
 
         private void Start()
         {
-            if (playDefaultBgm) PlayInternal(SoundEventId.MainBgm, null);
-            if (playDefaultAmbience) PlayInternal(SoundEventId.RoomAmbience, null);
+            if (playDefaultBgm) PlayInternal(SoundEventId.MainBgm, null, null);
+            if (playDefaultAmbience) PlayInternal(SoundEventId.RoomAmbience, null, null);
         }
 
-        private void ReleaseCompletedVoice(Voice voice, float now)
+        private void ReleaseCompletedVoice(Voice voice, double now)
         {
             if (voice == null || voice.Token == 0 || voice.Source.loop) return;
-            if (now >= voice.ExpectedEndTime || !voice.Source.isPlaying)
+            if (now >= voice.ExpectedEndDspTime)
             {
                 ReleaseVoice(voice);
             }
@@ -182,7 +195,10 @@ namespace GameLab.Week4
             return new Voice { Source = source };
         }
 
-        private SoundHandle PlayInternal(SoundEventId eventId, Vector3? worldPosition)
+        private SoundHandle PlayInternal(
+            SoundEventId eventId,
+            Vector3? worldPosition,
+            double? syncDspTime)
         {
             if (eventId == SoundEventId.None) return SoundHandle.Invalid;
             if (catalog == null)
@@ -234,7 +250,7 @@ namespace GameLab.Week4
 
             lastPlayTimes[eventId] = now;
             lastClipIndices[eventId] = clipIndex;
-            StartVoice(voice, eventId, entry, clip, clipIndex, worldPosition);
+            StartVoice(voice, eventId, entry, clip, clipIndex, worldPosition, syncDspTime);
             return new SoundHandle(voice.Token);
         }
 
@@ -244,7 +260,8 @@ namespace GameLab.Week4
             SoundEntry entry,
             AudioClip clip,
             int clipIndex,
-            Vector3? worldPosition)
+            Vector3? worldPosition,
+            double? syncDspTime)
         {
             StopVoiceImmediate(voice);
             voice.Token = nextToken++;
@@ -265,16 +282,39 @@ namespace GameLab.Week4
             source.maxDistance = entry.MaxDistance;
             source.transform.position = worldPosition ?? transform.position;
 
+            float maximumStartOffset = Mathf.Max(0f, clip.length - 0.01f);
+            float startOffset = Mathf.Min(entry.ClipStartOffset, maximumStartOffset);
+            source.time = startOffset;
+
             float targetVolume = GetSourceVolume(entry.Bus, entry.Volume);
             source.volume = entry.FadeIn > 0f ? 0f : targetVolume;
-            source.Play();
-            voice.ExpectedEndTime = entry.Loop
+            double currentDspTime = AudioSettings.dspTime;
+            double baseDspTime = syncDspTime ?? currentDspTime;
+            double requestedStartDspTime = baseDspTime + entry.SyncDelay;
+
+            // 지연 보정이 없는 입력 효과음은 현재 오디오 프레임에 즉시 요청한다.
+            // 실제 미래 시각을 지정한 경우에만 DSP 예약 재생을 사용한다.
+            if (requestedStartDspTime > currentDspTime)
+            {
+                voice.ScheduledStartDspTime = requestedStartDspTime;
+                source.PlayScheduled(voice.ScheduledStartDspTime);
+            }
+            else
+            {
+                voice.ScheduledStartDspTime = currentDspTime;
+                source.Play();
+            }
+
+            double remainingClipTime = (clip.length - startOffset) /
+                                       Mathf.Max(0.01f, Mathf.Abs(source.pitch));
+            voice.ExpectedEndDspTime = entry.Loop
                 ? float.PositiveInfinity
-                : Time.unscaledTime + clip.length / Mathf.Max(0.01f, Mathf.Abs(source.pitch));
+                : voice.ScheduledStartDspTime + remainingClipTime;
 
             if (entry.FadeIn > 0f)
             {
-                voice.FadeCoroutine = StartCoroutine(FadeVolume(voice, targetVolume, entry.FadeIn, false));
+                voice.FadeCoroutine = StartCoroutine(
+                    FadeVolume(voice, targetVolume, entry.FadeIn, false, true));
             }
         }
 
@@ -349,11 +389,26 @@ namespace GameLab.Week4
             }
 
             if (voice.FadeCoroutine != null) StopCoroutine(voice.FadeCoroutine);
-            voice.FadeCoroutine = StartCoroutine(FadeVolume(voice, 0f, fadeOut, true));
+            voice.FadeCoroutine = StartCoroutine(FadeVolume(voice, 0f, fadeOut, true, false));
         }
 
-        private IEnumerator FadeVolume(Voice voice, float target, float duration, bool stopAfterFade)
+        private IEnumerator FadeVolume(
+            Voice voice,
+            float target,
+            float duration,
+            bool stopAfterFade,
+            bool waitForScheduledStart)
         {
+            int token = voice.Token;
+            while (waitForScheduledStart &&
+                   voice.Token == token &&
+                   AudioSettings.dspTime < voice.ScheduledStartDspTime)
+            {
+                yield return null;
+            }
+
+            if (voice.Token != token) yield break;
+
             float start = voice.Source.volume;
             float elapsed = 0f;
             while (elapsed < duration && voice.Token != 0)
@@ -470,4 +525,5 @@ namespace GameLab.Week4
             return baseVolume * busVolumes[(int)SoundBus.Master] * busVolumes[(int)bus];
         }
     }
+
 }

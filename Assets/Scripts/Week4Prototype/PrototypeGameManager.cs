@@ -155,6 +155,7 @@ namespace GameLab.Week4
                     !cube.InteractionLocked)
                 {
                     selectedCube = cube;
+                    SoundManager.Play(SoundEventId.CubePickup, selectedCube.transform.position);
                     selectedCube.BeginDrag();
                     isDragging = true;
                 }
@@ -183,7 +184,10 @@ namespace GameLab.Week4
             {
                 if (selectedCube != null)
                 {
-                    selectedCube.EndDrag();
+                    bool placedOnBoard = selectedCube.EndDrag();
+                    SoundManager.Play(
+                        placedOnBoard ? SoundEventId.CubePlace : SoundEventId.CubeReturn,
+                        selectedCube.transform.position);
                 }
 
                 isDragging = false;
@@ -212,12 +216,21 @@ namespace GameLab.Week4
             if (cameraRight.sqrMagnitude < 0.001f) cameraRight = Vector3.right;
             if (boardUp.sqrMagnitude < 0.001f) boardUp = Vector3.up;
 
-            if (Keyboard.current.wKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, 90f);
-            if (Keyboard.current.sKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, -90f);
-            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, 90f);
-            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, -90f);
-            if (Keyboard.current.qKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, -90f);
-            if (Keyboard.current.eKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, 90f);
+            if (Keyboard.current.wKey.wasPressedThisFrame) RotateSelectedCube(cameraRight, 90f);
+            if (Keyboard.current.sKey.wasPressedThisFrame) RotateSelectedCube(cameraRight, -90f);
+            if (Keyboard.current.aKey.wasPressedThisFrame) RotateSelectedCube(cameraForward, 90f);
+            if (Keyboard.current.dKey.wasPressedThisFrame) RotateSelectedCube(cameraForward, -90f);
+            if (Keyboard.current.qKey.wasPressedThisFrame) RotateSelectedCube(boardUp, -90f);
+            if (Keyboard.current.eKey.wasPressedThisFrame) RotateSelectedCube(boardUp, 90f);
+        }
+
+        /// <summary>유효한 회전 입력을 받은 프레임에 효과음과 회전 동작을 함께 시작한다.</summary>
+        private void RotateSelectedCube(Vector3 axis, float degrees)
+        {
+            if (selectedCube == null) return;
+
+            SoundManager.Play(SoundEventId.CubeRotate, selectedCube.transform.position);
+            selectedCube.RotateBy(axis, degrees);
         }
 
         /// <summary>배치를 바꾸면 광선 경로만 무효화하고 이미 켜진 전등 상태는 유지한다.</summary>

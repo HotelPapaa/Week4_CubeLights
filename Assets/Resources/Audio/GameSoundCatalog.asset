@@ -25,6 +25,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.72
     pitchRange: {x: 0.96, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 12
@@ -35,10 +37,13 @@ MonoBehaviour:
     fadeOut: 0.08
   - eventId: 2
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: c1cea40cb70e8384f859d58a2014a807, type: 3}
     output: {fileID: 0}
     volume: 0.9
     pitchRange: {x: 0.94, y: 1.06}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 14
@@ -53,6 +58,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.7
     pitchRange: {x: 0.96, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 12
@@ -67,6 +74,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.64
     pitchRange: {x: 0.97, y: 1.03}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 12
@@ -81,6 +90,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.55
     pitchRange: {x: 0.95, y: 1.05}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 14
@@ -95,6 +106,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.85
     pitchRange: {x: 0.92, y: 1.08}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 16
@@ -109,6 +122,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 1
     pitchRange: {x: 0.92, y: 1.08}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 18
@@ -119,10 +134,13 @@ MonoBehaviour:
     fadeOut: 0.08
   - eventId: 8
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 8fc8a9723fd2e97408d1744e05f67b3b, type: 3}
     output: {fileID: 0}
     volume: 0.8
     pitchRange: {x: 0.96, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 16
@@ -133,15 +151,18 @@ MonoBehaviour:
     fadeOut: 0.15
   - eventId: 9
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 2d687fce81f543445a6fdcf943aa444b, type: 3}
     output: {fileID: 0}
     volume: 0.9
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0.05
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
     maxSimultaneous: 1
-    cooldown: 0.1
+    cooldown: 0
     loop: 0
     fadeIn: 0
     fadeOut: 0.1
@@ -151,6 +172,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.82
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -165,6 +188,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.62
     pitchRange: {x: 0.98, y: 1.02}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0.65
     minDistance: 1
     maxDistance: 20
@@ -179,6 +204,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.65
     pitchRange: {x: 0.96, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 14
@@ -193,6 +220,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.75
     pitchRange: {x: 0.96, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 14
@@ -207,6 +236,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.68
     pitchRange: {x: 0.98, y: 1.02}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 1
     minDistance: 1
     maxDistance: 14
@@ -217,10 +248,13 @@ MonoBehaviour:
     fadeOut: 0.08
   - eventId: 15
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 0a23e5760ecaa5449a8064fd97726014, type: 3}
     output: {fileID: 0}
     volume: 0.9
     pitchRange: {x: 0.98, y: 1.04}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -235,6 +269,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 1
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -249,6 +285,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.65
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -263,6 +301,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.72
     pitchRange: {x: 0.98, y: 1.02}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -277,6 +317,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.7
     pitchRange: {x: 0.98, y: 1.02}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -291,6 +333,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.7
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
@@ -305,6 +349,8 @@ MonoBehaviour:
     output: {fileID: 0}
     volume: 0.55
     pitchRange: {x: 1, y: 1}
+    syncDelay: 0
+    clipStartOffset: 0
     spatialBlend: 0
     minDistance: 1
     maxDistance: 18
