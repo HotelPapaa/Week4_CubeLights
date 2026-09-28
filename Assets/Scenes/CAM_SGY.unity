@@ -951,7 +951,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60.1
+  field of view: 60
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -977,8 +977,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89954096}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.055009525, y: -0.7013606, z: 0.05444812, w: 0.70859206}
-  m_LocalPosition: {x: 34.27301, y: 7.700001, z: -958.2815}
+  m_LocalRotation: {x: -0.08149502, y: -0.70046526, z: -0.08104307, w: 0.70437145}
+  m_LocalPosition: {x: 34.31302, y: 7.700001, z: -958.2815}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20243,6 +20243,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1293758228}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1299058070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299058071}
+  m_Layer: 0
+  m_Name: SceneManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1299058071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299058070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 36.83966, y: 3.123257, z: -0.34250727}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1316011754
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22261,6 +22292,12 @@ MonoBehaviour:
   playerCamera: {fileID: 89954099}
   stageCamera: {fileID: 330585545}
   gameManager: {fileID: 1518278686}
+  defaultCamera: {fileID: 0}
+  StageCIneCamera: {fileID: 0}
+  RuleCamera: {fileID: 0}
+  RightCamera: {fileID: 0}
+  TopCamera: {fileID: 0}
+  LeftCamera: {fileID: 0}
 --- !u!114 &1518278689
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25324,7 +25361,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945678161}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.07476958, y: -0.0053736353, z: -0.0030703938, w: -0.9971817}
+  m_LocalRotation: {x: -0.114931785, y: 0.002762178, z: 0.00031957848, w: 0.9933695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -27481,6 +27518,7 @@ MonoBehaviour:
   board: {fileID: 261625447}
   returnDuration: 0.28
   rotationDuration: 0.14
+  interactionLocked: 0
 --- !u!114 &6792500338839707059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27500,6 +27538,9 @@ MonoBehaviour:
   emitterLocalDirection: {x: 0, y: 0, z: 1}
   refractorPortALocal: {x: 0, y: 0, z: -1}
   refractorPortBLocal: {x: 1, y: 0, z: 0}
+  splitterInputLocal: {x: 1, y: 0, z: 0}
+  splitterOutputALocal: {x: 0, y: 0, z: -1}
+  splitterOutputBLocal: {x: 0, y: 0, z: 1}
 --- !u!4 &8643129785321586194 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5898753490055791752, guid: 67a294562c6b80c46ba8d234ddc40c32, type: 3}
@@ -27623,3 +27664,4 @@ SceneRoots:
   - {fileID: 1518278687}
   - {fileID: 958601619}
   - {fileID: 1013990850}
+  - {fileID: 1299058071}
