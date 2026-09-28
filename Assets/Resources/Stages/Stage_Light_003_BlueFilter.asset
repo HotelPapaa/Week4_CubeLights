@@ -13,30 +13,49 @@ MonoBehaviour:
   m_Name: Stage_Light_003_BlueFilter
   m_EditorClassIdentifier: 
   stageId: light-003
-  displayName: "\uD30C\uB780 \uC804\uB4F1"
-  hint: "\uD30C\uB780 \uC0C9\uC720\uB9AC\uB97C \uD1B5\uACFC\uD55C \uBE5B\uB9CC \uD30C\uB780
-    \uC804\uB4F1\uC744 \uCF24 \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  displayName: "\uAD74\uC808 \uC751\uC6A9"
+  hint: 
   gridSize: {x: 3, y: 5}
   cubeSpawns:
   - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
     localPosition: {x: 0, y: 0, z: 0}
-    localEulerAngles: {x: 0, y: 0, z: 0}
-    startsOnBoard: 1
+    localEulerAngles: {x: 0, y: 90, z: 0}
+    startsOnBoard: 0
     boardCell: {x: 2, y: 2}
-  - prefab: {fileID: 6571970794082095792, guid: c242cccd5355af043809ba172d8f4e38, type: 3}
-    localPosition: {x: 0.08, y: 0.1, z: -0.52}
+    usesReserveSlot: 1
+    reserveSide: 0
+    reserveSlot: 2
+  - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.2}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
-  - prefab: {fileID: 7018710130116651528, guid: ade98b91507e0a047aae822ba33df866, type: 3}
-    localPosition: {x: 0.33999997, y: 0.1, z: -0.52}
+    usesReserveSlot: 0
+    reserveSide: 2
+    reserveSlot: 1
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.3}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
+    usesReserveSlot: 0
+    reserveSide: 2
+    reserveSlot: 1
+  - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.6}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 0, y: 0}
+    usesReserveSlot: 0
+    reserveSide: 2
+    reserveSlot: 1
   lampTargets:
-  - gridPosition: {x: -1, y: 0, z: 2}
+  - gridPosition: {x: -1, y: 1, z: 3}
     frontDirection: 0
-    requiredColor: 2
+    requiredColor: 0
+  - gridPosition: {x: -1, y: 2, z: 3}
+    frontDirection: 0
+    requiredColor: 0
   projectionUsesDepthAxis: 1
   targetCells: []
   enableIce: 1

@@ -53,6 +53,8 @@ namespace GameLab.Week4.Editor
                 new Color(0f, 0.018f, 0.08f, 1f)),
             new MaterialSpec("ColoredGlass_Red", "M_Cube_ColoredGlass_Red", new Color(1f, 0.1f, 0.07f, 0.43f), 0.08f, 0.92f, true,
                 new Color(0.09f, 0.004f, 0.002f, 1f)),
+            new MaterialSpec("ColoredGlass_Green", "M_Cube_ColoredGlass_Green", new Color(0.08f, 0.9f, 0.2f, 0.43f), 0.08f, 0.92f, true,
+                new Color(0.002f, 0.075f, 0.008f, 1f)),
             new MaterialSpec("ColoredGlass_Yellow", "M_Cube_ColoredGlass_Yellow", new Color(1f, 0.72f, 0.05f, 0.43f), 0.08f, 0.92f, true,
                 new Color(0.08f, 0.04f, 0.001f, 1f)),
             new MaterialSpec("Ice", "M_Cube_Ice", new Color(0.45f, 0.78f, 1f, 0.7f), 0f, 0.88f, true,
@@ -61,19 +63,8 @@ namespace GameLab.Week4.Editor
             new MaterialSpec("LightEmitter", "M_Cube_LightEmitter", new Color(0.72f, 0.84f, 1f, 1f), 0.1f, 0.72f,
                 emissionColor: new Color(0.12f, 0.18f, 0.24f, 1f)),
             new MaterialSpec("Refractor", "M_Cube_Refractor", new Color(0.16f, 0.62f, 0.72f, 1f), 0.25f, 0.82f,
-                emissionColor: new Color(0.01f, 0.055f, 0.07f, 1f)),
-            // 표식 재질은 프리팹 몸체에 적용하지 않고 방향 화살표 자식에만 연결한다.
-            new MaterialSpec(null, "M_Marker_EmitterArrow", new Color(1f, 0.72f, 0.08f, 1f), 0f, 0.7f,
-                emissionColor: new Color(0.8f, 0.32f, 0.015f, 1f)),
-            new MaterialSpec(null, "M_Marker_RefractorArrow", new Color(1f, 0.08f, 0.72f, 1f), 0f, 0.68f,
-                emissionColor: new Color(0.55f, 0.015f, 0.3f, 1f))
+                emissionColor: new Color(0.01f, 0.055f, 0.07f, 1f))
         };
-
-        [InitializeOnLoadMethod]
-        private static void QueueSetup()
-        {
-            EditorApplication.delayCall += SetupMaterials;
-        }
 
         [MenuItem("Tools/GameLab/Setup Cube Type Materials")]
         public static void SetupMaterials()
@@ -116,7 +107,8 @@ namespace GameLab.Week4.Editor
             }
             else
             {
-                material.shader = shader;
+                // 기존 머티리얼은 사용자가 직접 조정한 색과 표면 설정을 보존한다.
+                return material;
             }
 
             material.SetColor("_BaseColor", spec.BaseColor);
@@ -183,9 +175,17 @@ namespace GameLab.Week4.Editor
             try
             {
                 Transform markerRoot = prefabRoot.transform.Find("OpticDirectionMarkers");
+                bool preserveAuthoredOpticParts = prefabName == "LightEmitter" || prefabName == "Refractor";
                 foreach (Renderer renderer in prefabRoot.GetComponentsInChildren<Renderer>(true))
                 {
                     if (markerRoot != null && renderer.transform.IsChildOf(markerRoot))
+                    {
+                        continue;
+                    }
+
+                    // Emitter와 Refractor의 자식들은 각자 저작된 재질과 모양을 사용한다.
+                    // 몸체 Renderer만 자동 재질을 적용하고 자식 외형은 프리팹 저작 상태를 보존한다.
+                    if (preserveAuthoredOpticParts && renderer.gameObject != prefabRoot)
                     {
                         continue;
                     }

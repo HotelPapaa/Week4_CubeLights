@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
+  m_Name: Stage_Light_06_RefractionandIce
+  m_EditorClassIdentifier: 
+  stageId: light-006
+  displayName: TestPlace
+  hint: 
+  gridSize: {x: 3, y: 5}
+  cubeSpawns:
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 90, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 2, y: 2}
+    usesReserveSlot: 1
+    reserveSide: 0
+    reserveSlot: 2
+  - prefab: {fileID: 6189360690847491035, guid: 8fa13a289d138034da11bd41df06e472, type: 3}
+    localPosition: {x: 0, y: 0, z: 0.3}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 1, y: 2}
+    usesReserveSlot: 0
+    reserveSide: 0
+    reserveSlot: 0
+  - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
+    localPosition: {x: 0, y: 0, z: 0.6}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 1, y: 2}
+    usesReserveSlot: 0
+    reserveSide: 0
+    reserveSlot: 0
+  - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
+    localPosition: {x: 0, y: 0, z: 0.9}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 1, y: 2}
+    usesReserveSlot: 0
+    reserveSide: 0
+    reserveSlot: 0
+  - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
+    localPosition: {x: 0, y: 0, z: 1.2}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 1, y: 2}
+    usesReserveSlot: 0
+    reserveSide: 0
+    reserveSlot: 0
+  lampTargets:
+  - gridPosition: {x: -1, y: 0, z: 3}
+    frontDirection: 0
+    requiredColor: 0
+  - gridPosition: {x: -1, y: 1, z: 1}
+    frontDirection: 0
+    requiredColor: 0
+  projectionUsesDepthAxis: 1
+  targetCells: []
+  enableIce: 1
+  enableBrittle: 1
+  enableAdhesive: 1
+  enableColors: 1

@@ -1,0 +1,315 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b864be51a4234d829f80173f9d3b48d1, type: 3}
+  m_Name: GameSoundCatalog
+  m_EditorClassIdentifier: 
+  audioMixer: {fileID: 0}
+  masterVolumeParameter: MasterVolume
+  bgmVolumeParameter: BgmVolume
+  ambienceVolumeParameter: AmbienceVolume
+  sfxVolumeParameter: SfxVolume
+  uiVolumeParameter: UiVolume
+  entries:
+  - eventId: 1
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.72
+    pitchRange: {x: 0.96, y: 1.04}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 12
+    maxSimultaneous: 3
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 2
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.9
+    pitchRange: {x: 0.94, y: 1.06}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 14
+    maxSimultaneous: 5
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 3
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.7
+    pitchRange: {x: 0.96, y: 1.04}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 12
+    maxSimultaneous: 3
+    cooldown: 0.08
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.1
+  - eventId: 4
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.64
+    pitchRange: {x: 0.97, y: 1.03}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 12
+    maxSimultaneous: 4
+    cooldown: 0.05
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.06
+  - eventId: 5
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.55
+    pitchRange: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 14
+    maxSimultaneous: 5
+    cooldown: 0.05
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 6
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.85
+    pitchRange: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 16
+    maxSimultaneous: 6
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 7
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 1
+    pitchRange: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 5
+    cooldown: 0.05
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 8
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.8
+    pitchRange: {x: 0.96, y: 1.04}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 16
+    maxSimultaneous: 4
+    cooldown: 0.08
+    loop: 0
+    fadeIn: 0.03
+    fadeOut: 0.15
+  - eventId: 9
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.9
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0.1
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.1
+  - eventId: 10
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.82
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0.1
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.1
+  - eventId: 11
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.62
+    pitchRange: {x: 0.98, y: 1.02}
+    spatialBlend: 0.65
+    minDistance: 1
+    maxDistance: 20
+    maxSimultaneous: 1
+    cooldown: 0.05
+    loop: 1
+    fadeIn: 0.12
+    fadeOut: 0.18
+  - eventId: 12
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.65
+    pitchRange: {x: 0.96, y: 1.04}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 14
+    maxSimultaneous: 4
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 13
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.75
+    pitchRange: {x: 0.96, y: 1.04}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 14
+    maxSimultaneous: 5
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 14
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.68
+    pitchRange: {x: 0.98, y: 1.02}
+    spatialBlend: 1
+    minDistance: 1
+    maxDistance: 14
+    maxSimultaneous: 5
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.08
+  - eventId: 15
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 0.9
+    pitchRange: {x: 0.98, y: 1.04}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 5
+    cooldown: 0.04
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.1
+  - eventId: 16
+    bus: 3
+    clips: []
+    output: {fileID: 0}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0.4
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.15
+  - eventId: 17
+    bus: 4
+    clips: []
+    output: {fileID: 0}
+    volume: 0.65
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0.15
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.06
+  - eventId: 18
+    bus: 4
+    clips: []
+    output: {fileID: 0}
+    volume: 0.72
+    pitchRange: {x: 0.98, y: 1.02}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0.15
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.06
+  - eventId: 19
+    bus: 4
+    clips: []
+    output: {fileID: 0}
+    volume: 0.7
+    pitchRange: {x: 0.98, y: 1.02}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 4
+    cooldown: 0.03
+    loop: 0
+    fadeIn: 0
+    fadeOut: 0.05
+  - eventId: 20
+    bus: 1
+    clips: []
+    output: {fileID: 0}
+    volume: 0.7
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0
+    loop: 1
+    fadeIn: 1.2
+    fadeOut: 0.8
+  - eventId: 21
+    bus: 2
+    clips: []
+    output: {fileID: 0}
+    volume: 0.55
+    pitchRange: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 18
+    maxSimultaneous: 1
+    cooldown: 0
+    loop: 1
+    fadeIn: 1
+    fadeOut: 0.8
