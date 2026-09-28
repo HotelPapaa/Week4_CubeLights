@@ -270,6 +270,9 @@ namespace GameLab.Week4
             if (type != PuzzleCubeType.ColoredGlass) return PuzzleLightColor.White;
             string normalized = objectName.ToLowerInvariant();
             if (normalized.Contains("red") || normalized.Contains("빨강")) return PuzzleLightColor.Red;
+            if (normalized.Contains("green") || normalized.Contains("초록")) return PuzzleLightColor.Green;
+            if (normalized.Contains("cyan") || normalized.Contains("청록")) return PuzzleLightColor.Cyan;
+            if (normalized.Contains("magenta") || normalized.Contains("자홍")) return PuzzleLightColor.Magenta;
             if (normalized.Contains("yellow") || normalized.Contains("노랑")) return PuzzleLightColor.Yellow;
             return PuzzleLightColor.Blue;
         }

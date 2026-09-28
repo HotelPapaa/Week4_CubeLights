@@ -155,6 +155,7 @@ namespace GameLab.Week4
                     !cube.InteractionLocked)
                 {
                     selectedCube = cube;
+                    SoundManager.Play(SoundEventId.CubePickup, selectedCube.transform.position);
                     selectedCube.BeginDrag();
                     isDragging = true;
                 }
@@ -183,7 +184,10 @@ namespace GameLab.Week4
             {
                 if (selectedCube != null)
                 {
-                    selectedCube.EndDrag();
+                    bool placedOnBoard = selectedCube.EndDrag();
+                    SoundManager.Play(
+                        placedOnBoard ? SoundEventId.CubePlace : SoundEventId.CubeReturn,
+                        selectedCube.transform.position);
                 }
 
                 isDragging = false;
@@ -192,6 +196,7 @@ namespace GameLab.Week4
 
         /// <summary>
         /// 마우스로 큐브를 잡고 있는 동안 W/S는 화면 기준 앞뒤, A/D는 좌우로 90도 회전한다.
+        /// Q/E는 보드 수직축을 중심으로 횡 방향 90도 회전한다.
         /// 카메라가 월드축과 비스듬해도 플레이어가 보는 방향과 입력 방향이 일치한다.
         /// </summary>
         private void HandleRotation()
@@ -204,15 +209,28 @@ namespace GameLab.Week4
 
             Vector3 cameraForward = Vector3.ProjectOnPlane(playerCamera.transform.forward, Vector3.up).normalized;
             Vector3 cameraRight = Vector3.ProjectOnPlane(playerCamera.transform.right, Vector3.up).normalized;
+            Vector3 boardUp = board != null ? board.transform.up : Vector3.up;
 
             // 카메라가 정확히 수직을 보는 예외에서도 회전축이 0이 되지 않게 월드축을 사용한다.
             if (cameraForward.sqrMagnitude < 0.001f) cameraForward = Vector3.forward;
             if (cameraRight.sqrMagnitude < 0.001f) cameraRight = Vector3.right;
+            if (boardUp.sqrMagnitude < 0.001f) boardUp = Vector3.up;
 
-            if (Keyboard.current.wKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, 90f);
-            if (Keyboard.current.sKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, -90f);
-            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, 90f);
-            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, -90f);
+            if (Keyboard.current.wKey.wasPressedThisFrame) RotateSelectedCube(cameraRight, 90f);
+            if (Keyboard.current.sKey.wasPressedThisFrame) RotateSelectedCube(cameraRight, -90f);
+            if (Keyboard.current.aKey.wasPressedThisFrame) RotateSelectedCube(cameraForward, 90f);
+            if (Keyboard.current.dKey.wasPressedThisFrame) RotateSelectedCube(cameraForward, -90f);
+            if (Keyboard.current.qKey.wasPressedThisFrame) RotateSelectedCube(boardUp, -90f);
+            if (Keyboard.current.eKey.wasPressedThisFrame) RotateSelectedCube(boardUp, 90f);
+        }
+
+        /// <summary>유효한 회전 입력을 받은 프레임에 효과음과 회전 동작을 함께 시작한다.</summary>
+        private void RotateSelectedCube(Vector3 axis, float degrees)
+        {
+            if (selectedCube == null) return;
+
+            SoundManager.Play(SoundEventId.CubeRotate, selectedCube.transform.position);
+            selectedCube.RotateBy(axis, degrees);
         }
 
         /// <summary>배치를 바꾸면 광선 경로만 무효화하고 이미 켜진 전등 상태는 유지한다.</summary>
@@ -223,6 +241,7 @@ namespace GameLab.Week4
 
         private void HandleLightSimulationStep(LightSimulationResult result)
         {
+            bool wasWon = hasWon;
             if (result != null)
             {
                 foreach (LampLightResult lamp in result.Lamps)
@@ -230,7 +249,10 @@ namespace GameLab.Week4
                     string key = BuildLampKey(lamp.Target);
                     if (lamp.HasCorrectHit)
                     {
-                        latchedLampKeys.Add(key);
+                        if (latchedLampKeys.Add(key))
+                        {
+                            SoundManager.Play(SoundEventId.LampOn);
+                        }
                     }
 
                     if (latchedLampKeys.Contains(key))
@@ -242,6 +264,10 @@ namespace GameLab.Week4
 
             lastLightResult = result;
             hasWon = currentStage != null && currentStage.Matches(result);
+            if (!wasWon && hasWon)
+            {
+                SoundManager.Play(SoundEventId.PuzzleSolved);
+            }
             lightVisualizer?.ShowResult(result);
         }
 
@@ -271,7 +297,7 @@ namespace GameLab.Week4
 
             string message = hasWon
                 ? "완성! 모든 전등에 올바른 빛이 정면으로 들어왔습니다."
-                : "큐브: 마우스로 드래그 / W·S: 앞뒤 회전 / A·D: 수평 회전\nSpace: 점등하고 전등 결과 확인";
+                : "큐브: 마우스로 드래그 / W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\nSpace: 점등하고 전등 결과 확인";
             Rect panelRect = new Rect(20, 20, 500, 78);
 
             // 흰색 기본 텍스처에 색만 입혀 반투명 패널 배경을 그린다.

@@ -31,6 +31,7 @@ namespace GameLab.Week4
         private int currentStageIndex;
         private bool stageSolved;
         private bool hasStarted;
+        private bool loadingFromRestart;
 
         public PuzzleStageDefinition CurrentStage => currentStage;
         public int CurrentStageIndex => currentStageIndex;
@@ -161,6 +162,9 @@ namespace GameLab.Week4
 
             stageSolved = false;
             gameManager?.SetInteractionEnabled(true);
+            SoundManager.Play(loadingFromRestart
+                ? SoundEventId.StageRestart
+                : SoundEventId.StageLoad);
             Debug.Log($"스테이지 로드: {currentStageIndex + 1}. {currentStage.DisplayName}", this);
         }
 
@@ -228,7 +232,9 @@ namespace GameLab.Week4
 
         public void RestartStage()
         {
+            loadingFromRestart = true;
             LoadStage(currentStageIndex);
+            loadingFromRestart = false;
         }
 
         public void LoadNextStage()
@@ -317,11 +323,23 @@ namespace GameLab.Week4
 
             GUILayout.BeginHorizontal();
             GUI.enabled = currentStageIndex > 0;
-            if (GUILayout.Button("이전")) LoadPreviousStage();
+            if (GUILayout.Button("이전"))
+            {
+                SoundManager.Play(SoundEventId.UiClick);
+                LoadPreviousStage();
+            }
             GUI.enabled = true;
-            if (GUILayout.Button("다시 시작")) RestartStage();
+            if (GUILayout.Button("다시 시작"))
+            {
+                SoundManager.Play(SoundEventId.UiClick);
+                RestartStage();
+            }
             GUI.enabled = currentStageIndex < campaign.StageCount - 1 && (allowUnlockedNavigation || stageSolved);
-            if (GUILayout.Button("다음")) LoadNextStage();
+            if (GUILayout.Button("다음"))
+            {
+                SoundManager.Play(SoundEventId.UiClick);
+                LoadNextStage();
+            }
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             GUILayout.EndArea();

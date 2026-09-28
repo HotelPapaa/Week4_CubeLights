@@ -338,7 +338,14 @@ namespace GameLab.Week4
 
                     Vector3Int origin = new(pair.Key.x, level, pair.Key.y);
                     Vector3Int direction = properties.GetEmitterDirection(transform);
-                    TraceBeam(origin, direction, properties.LightColor, verticalLimit, result);
+                    TraceBeam(
+                        origin,
+                        direction,
+                        properties.LightColor,
+                        verticalLimit,
+                        result,
+                        null,
+                        properties.LightColor != PuzzleLightColor.White);
                 }
             }
 
@@ -358,7 +365,9 @@ namespace GameLab.Week4
                     properties.GetEmitterDirection(transform),
                     properties.LightColor,
                     verticalLimit,
-                    result);
+                    result,
+                    null,
+                    properties.LightColor != PuzzleLightColor.White);
             }
 
             return result;
@@ -441,7 +450,8 @@ namespace GameLab.Week4
             PuzzleLightColor initialColor,
             int verticalLimit,
             LightSimulationResult result,
-            HashSet<string> sharedVisited = null)
+            HashSet<string> sharedVisited = null,
+            bool hasAccumulatedColor = false)
         {
             if (initialDirection == Vector3Int.zero) return;
 
@@ -454,7 +464,12 @@ namespace GameLab.Week4
             int maximumSteps = Mathf.Max(32, width * depth * Mathf.Max(1, verticalLimit) * 8);
             for (int step = 0; step < maximumSteps; step++)
             {
-                string state = $"{position.x},{position.y},{position.z}:{direction.x},{direction.y},{direction.z}:{(int)color}";
+                // 같은 흰색이라도 아직 착색 전인 기본 흰빛과 RGB가 모두 합쳐진 흰빛은
+                // 다음 색유리에서 다르게 동작하므로 방문 상태에서도 구분한다.
+                string state =
+                    $"{position.x},{position.y},{position.z}:" +
+                    $"{direction.x},{direction.y},{direction.z}:" +
+                    $"{(int)color}:{(hasAccumulatedColor ? 1 : 0)}";
                 if (!visited.Add(state)) return;
 
                 Vector3Int next = position + direction;
@@ -491,7 +506,11 @@ namespace GameLab.Week4
                 {
                     if (properties.CubeType == PuzzleCubeType.ColoredGlass)
                     {
-                        color = properties.LightColor;
+                        color = LightDirectionUtility.ApplyColorFilter(
+                            color,
+                            properties.LightColor,
+                            hasAccumulatedColor);
+                        hasAccumulatedColor = true;
                     }
 
                     position = next;
@@ -514,8 +533,22 @@ namespace GameLab.Week4
                         out Vector3Int splitDirectionB))
                 {
                     // 두 갈래가 같은 상태로 다시 합쳐지거나 순환하면 한 번만 계산한다.
-                    TraceBeam(next, splitDirectionA, color, verticalLimit, result, visited);
-                    TraceBeam(next, splitDirectionB, color, verticalLimit, result, visited);
+                    TraceBeam(
+                        next,
+                        splitDirectionA,
+                        color,
+                        verticalLimit,
+                        result,
+                        visited,
+                        hasAccumulatedColor);
+                    TraceBeam(
+                        next,
+                        splitDirectionB,
+                        color,
+                        verticalLimit,
+                        result,
+                        visited,
+                        hasAccumulatedColor);
                     return;
                 }
 

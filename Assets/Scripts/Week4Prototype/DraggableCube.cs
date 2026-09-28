@@ -158,6 +158,7 @@ namespace GameLab.Week4
                 StopCoroutine(fallCoroutine);
             }
 
+            SoundManager.Play(SoundEventId.CubeFall, transform.position);
             fallCoroutine = StartCoroutine(AnimateFall(transform.position, worldPosition, duration));
         }
 
@@ -249,6 +250,7 @@ namespace GameLab.Week4
             if (duration <= 0f)
             {
                 transform.position = endPosition;
+                SoundManager.Play(SoundEventId.CubeLand, transform.position);
                 fallCoroutine = null;
                 yield break;
             }
@@ -264,6 +266,7 @@ namespace GameLab.Week4
             }
 
             transform.position = endPosition;
+            SoundManager.Play(SoundEventId.CubeLand, transform.position);
             fallCoroutine = null;
         }
     }

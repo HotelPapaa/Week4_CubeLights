@@ -107,6 +107,7 @@ namespace GameLab.Week4.Editor
             EnsureCubePrefab("Glass", "Glass", PuzzleCubeType.Glass, PuzzleLightColor.White);
             EnsureCubePrefab("ColoredGlass_Blue", "ColoredGlass_Blue", PuzzleCubeType.ColoredGlass, PuzzleLightColor.Blue);
             EnsureCubePrefab("ColoredGlass_Red", "ColoredGlass_Blue", PuzzleCubeType.ColoredGlass, PuzzleLightColor.Red);
+            EnsureCubePrefab("ColoredGlass_Green", "ColoredGlass_Blue", PuzzleCubeType.ColoredGlass, PuzzleLightColor.Green);
             EnsureCubePrefab("ColoredGlass_Yellow", "ColoredGlass_Blue", PuzzleCubeType.ColoredGlass, PuzzleLightColor.Yellow);
             EnsureCubePrefab("Brittle", "Brittle", PuzzleCubeType.Brittle, PuzzleLightColor.White);
             EnsureCubePrefab("Styrofoam", "Styrofoam", PuzzleCubeType.Styrofoam, PuzzleLightColor.White);
