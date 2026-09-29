@@ -274,7 +274,7 @@ namespace GameLab.Week4
             isLightOn = false;
             SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
-            gameManager?.SetLightVisualizationVisible(false);
+            gameManager?.ResetLightAttempt();
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
         }
@@ -290,7 +290,7 @@ namespace GameLab.Week4
             }
             gameManager?.CancelLightEffects();
             SetCameraState(showStage: false);
-            gameManager?.SetLightVisualizationVisible(false);
+            gameManager?.ResetLightAttempt();
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
         }
