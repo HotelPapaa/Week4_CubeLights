@@ -332,7 +332,8 @@ MonoBehaviour:
     fadeOut: 0.05
   - eventId: 20
     bus: 1
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: c44246981eaf9ca4bb50c5d1c436d14a, type: 3}
     output: {fileID: 0}
     volume: 0.7
     pitchRange: {x: 1, y: 1}

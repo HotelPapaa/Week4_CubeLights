@@ -27,6 +27,9 @@ namespace GameLab.Week4
         public bool startsOnBoard;
         public Vector2Int boardCell;
 
+        [Tooltip("Starts On Board와 함께 켜면 해당 격자 칸에서 드래그와 회전을 막습니다.")]
+        public bool lockOnBoard;
+
         [Tooltip("켜면 고정되고 그리드 외곽쪽을 사용합니다.")]
         public bool usesReserveSlot;
 
@@ -47,6 +50,7 @@ namespace GameLab.Week4
             localEulerAngles = eulerAngles;
             startsOnBoard = false;
             boardCell = default;
+            lockOnBoard = false;
             usesReserveSlot = false;
             reserveSide = CubeReserveSide.Near;
             reserveSlot = 1;
@@ -54,13 +58,18 @@ namespace GameLab.Week4
         }
 
         // 보드 위에서 시작하는 경우
-        public StageCubeSpawn(GameObject cubePrefab, Vector2Int initialBoardCell, Vector3 eulerAngles)
+        public StageCubeSpawn(
+            GameObject cubePrefab,
+            Vector2Int initialBoardCell,
+            Vector3 eulerAngles,
+            bool lockInPlace = false)
         {
             prefab = cubePrefab;
             localPosition = Vector3.zero;
             localEulerAngles = eulerAngles;
             startsOnBoard = true;
             boardCell = initialBoardCell;
+            lockOnBoard = lockInPlace;
             usesReserveSlot = false;
             reserveSide = CubeReserveSide.Near;
             reserveSlot = 1;
@@ -79,6 +88,7 @@ namespace GameLab.Week4
             localEulerAngles = eulerAngles;
             startsOnBoard = false;
             boardCell = default;
+            lockOnBoard = false;
             usesReserveSlot = true;
             reserveSide = side;
             reserveSlot = Mathf.Max(1, slot);
@@ -98,6 +108,7 @@ namespace GameLab.Week4
             localEulerAngles = eulerAngles;
             startsOnBoard = false;
             boardCell = default;
+            lockOnBoard = false;
             usesReserveSlot = true;
             reserveSide = side;
             reserveSlot = Mathf.Max(1, slot);

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GameLab.Week4
 {
@@ -34,6 +35,8 @@ namespace GameLab.Week4
         [Min(1)] [SerializeField] private int initialSfxPoolSize = 12;
         [Min(1)] [SerializeField] private int maximumSfxPoolSize = 32;
         [SerializeField] private bool playDefaultBgm = true;
+        [Tooltip("기본 MainBgm이 재생되는 씬 이름")]
+        [SerializeField] private string defaultBgmSceneName = "KHP_Puzzles";
         [SerializeField] private bool playDefaultAmbience = true;
         [Tooltip("Catalog에 빈 Event가 있을 때 Console에 경고를 남깁니다.")]
         [SerializeField] private bool logMissingEntries;
@@ -132,6 +135,7 @@ namespace GameLab.Week4
 
             instance = this;
             DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += HandleSceneLoaded;
             if (catalog == null)
             {
                 catalog = Resources.Load<SoundCatalog>(CatalogResourcePath);
@@ -154,8 +158,49 @@ namespace GameLab.Week4
 
         private void Start()
         {
-            if (playDefaultBgm) PlayInternal(SoundEventId.MainBgm, null, null);
+            UpdateDefaultBgmForScene(SceneManager.GetActiveScene());
             if (playDefaultAmbience) PlayInternal(SoundEventId.RoomAmbience, null, null);
+        }
+
+        private void OnDestroy()
+        {
+            if (instance != this) return;
+
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            instance = null;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            UpdateDefaultBgmForScene(scene);
+        }
+
+        private void UpdateDefaultBgmForScene(Scene scene)
+        {
+            bool shouldPlay = playDefaultBgm &&
+                              string.Equals(
+                                  scene.name,
+                                  defaultBgmSceneName,
+                                  System.StringComparison.Ordinal);
+            bool isPlayingMainBgm = bgmVoice != null &&
+                                    bgmVoice.Token != 0 &&
+                                    bgmVoice.EventId == SoundEventId.MainBgm;
+
+            if (shouldPlay)
+            {
+                if (!isPlayingMainBgm)
+                {
+                    PlayInternal(SoundEventId.MainBgm, null, null);
+                }
+
+                return;
+            }
+
+            if (isPlayingMainBgm)
+            {
+                // 씬 전환 뒤 Bonfire가 남지 않도록 페이드 대기 없이 즉시 정지한다.
+                StopInternal(bgmVoice.Token, 0f);
+            }
         }
 
         private void ReleaseCompletedVoice(Voice voice, double now)

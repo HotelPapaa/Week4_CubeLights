@@ -38,6 +38,7 @@ namespace GameLab.Week4
         [SerializeField] public CinemachineCamera TopCamera;
         [SerializeField] public CinemachineCamera LeftCamera;
         [SerializeField] public CinemachineCamera EasterEggCamera;
+        [SerializeField] public CinemachineCamera ColorChartCamera;
 
 
         private CinemachineCamera[] sceneCameras;
@@ -421,13 +422,31 @@ namespace GameLab.Week4
                         case "EasterEggCamera":
                             if (EasterEggCamera == null) EasterEggCamera = camera;
                             break;
+                        case "ColorChart Camera":
+                            if (ColorChartCamera == null) ColorChartCamera = camera;
+                            break;
                     }
                 }
             }
 
             // 위에서 보았을 때 반시계 순서. 휠 아래 입력은 이 배열을 역방향으로 순회한다.
             orbitCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera };
-            sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera, EasterEggCamera };
+            sceneCameras = new[]
+            {
+                defaultCamera,
+                RightCamera,
+                TopCamera,
+                LeftCamera,
+                StageCIneCamera,
+                RuleCamera,
+                EasterEggCamera,
+                ColorChartCamera
+            };
+        }
+
+        public bool IsCameraSelected(CinemachineCamera camera)
+        {
+            return camera != null && currentCamera == camera;
         }
 
         public bool SelectCamera(CinemachineCamera selectedCamera)

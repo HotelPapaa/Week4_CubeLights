@@ -24,6 +24,12 @@ namespace GameLab.Week4
         [SerializeField] private LightingSequenceController lightingController;
         [SerializeField] private GameObject legacyCubeRoot;
 
+        [Header("색 조합표")]
+        [Tooltip("7번 색 조합 소개 스테이지부터 계속 표시할 씬 오브젝트")]
+        [SerializeField] private GameObject colorChart;
+        [Tooltip("ColorChart가 처음 공개되는 스테이지 에셋")]
+        [SerializeField] private PuzzleStageDefinition colorChartRevealStage;
+
         [Header("Reserve 표시")]
         [SerializeField] private GameObject reserveSlotFramePrefab;
 
@@ -38,6 +44,7 @@ namespace GameLab.Week4
         private bool stageSolved;
         private bool hasStarted;
         private bool loadingFromRestart;
+        private bool colorChartRevealed;
 
         public PuzzleStageDefinition CurrentStage => currentStage;
         public int CurrentStageIndex => currentStageIndex;
@@ -78,6 +85,9 @@ namespace GameLab.Week4
         {
             // 스테이지 탐색 패널은 일반 플레이에서는 숨기고 F12 개발자 토글로만 연다.
             showStageUI = false;
+
+            // 첫 렌더링 전에 숨겨 두고, 공개 스테이지를 불러올 때만 활성화한다.
+            if (colorChart != null) colorChart.SetActive(false);
 
             if (campaign == null)
             {
@@ -135,6 +145,8 @@ namespace GameLab.Week4
             currentStage = campaign.GetStage(currentStageIndex);
             if (currentStage == null) return;
 
+            UpdateColorChartVisibility();
+
             lightingController?.ResetToPlayerView();
             gameManager?.SetInteractionEnabled(false);
             ClearRuntimeCubes();
@@ -178,7 +190,10 @@ namespace GameLab.Week4
                 DraggableCube cube = cubeObject.GetComponent<DraggableCube>() ??
                                      cubeObject.AddComponent<DraggableCube>();
                 cube.Initialize(board);
-                cube.SetInteractionLocked(spawn.usesReserveSlot);
+                // Reserve 큐브는 항상 고정하고, 보드 위 큐브는 스테이지 데이터에서 요청한 경우에만 고정한다.
+                bool lockedOnBoard = spawn.startsOnBoard && spawn.lockOnBoard;
+                bool interactionLocked = spawn.usesReserveSlot || lockedOnBoard;
+                cube.SetInteractionLocked(interactionLocked);
                 if (spawn.usesReserveSlot)
                 {
                     board.RegisterExternalCube(cube);
@@ -187,6 +202,11 @@ namespace GameLab.Week4
                 if (spawn.startsOnBoard)
                 {
                     cube.PlaceAtStageStart(spawn.boardCell);
+                    if (lockedOnBoard && !spawn.usesReserveSlot)
+                    {
+                        // 초기 localPosition이 아니라 실제 격자 스냅 위치에 고정 표시 프레임을 씌운다.
+                        CreateReserveSlotFrame(cubeObject, cubeObject.transform.position);
+                    }
                 }
             }
 
@@ -197,6 +217,31 @@ namespace GameLab.Week4
                 : SoundEventId.StageLoad);
             Debug.Log($"스테이지 로드: {currentStageIndex + 1}. {currentStage.DisplayName}", this);
             StageLoaded?.Invoke(currentStageIndex);
+        }
+
+        /// <summary>
+        /// 색 조합 소개 스테이지에 도달했거나 그 뒤 스테이지에서 시작하면 조합표를 공개한다.
+        /// 한 번 공개된 뒤에는 이전 스테이지로 이동해도 플레이 세션 동안 계속 유지한다.
+        /// </summary>
+        private void UpdateColorChartVisibility()
+        {
+            if (colorChart == null || colorChartRevealStage == null || campaign == null) return;
+
+            int revealStageIndex = -1;
+            for (int index = 0; index < campaign.StageCount; index++)
+            {
+                if (campaign.GetStage(index) != colorChartRevealStage) continue;
+
+                revealStageIndex = index;
+                break;
+            }
+
+            if (revealStageIndex >= 0 && currentStageIndex >= revealStageIndex)
+            {
+                colorChartRevealed = true;
+            }
+
+            colorChart.SetActive(colorChartRevealed);
         }
 
         /// <summary>

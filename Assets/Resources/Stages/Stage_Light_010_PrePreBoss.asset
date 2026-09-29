@@ -18,10 +18,11 @@ MonoBehaviour:
   gridSize: {x: 3, y: 5}
   cubeSpawns:
   - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
-    localPosition: {x: -0.15, y: 0, z: 0}
+    localPosition: {x: 0, y: 0, z: 0}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 2, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 1
     reserveSide: 2
     reserveSlot: 4
@@ -31,6 +32,7 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -40,6 +42,7 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -49,6 +52,7 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -58,6 +62,7 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -67,6 +72,7 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -76,15 +82,17 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
     reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: -0.35, y: 0.09, z: 1.91}
-    localEulerAngles: {x: 0, y: 0, z: 0}
-    startsOnBoard: 0
-    boardCell: {x: 1, y: 2}
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 90, y: 0, z: 0}
+    startsOnBoard: 1
+    boardCell: {x: 0, y: 3}
+    lockOnBoard: 1
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
@@ -94,15 +102,17 @@ MonoBehaviour:
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
     reserveLevel: 0
   - prefab: {fileID: 6189360690847491035, guid: 8fa13a289d138034da11bd41df06e472, type: 3}
-    localPosition: {x: -0.95, y: 0.09, z: 2.21}
+    localPosition: {x: -0.35, y: 0.09, z: 1.91}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 1, y: 2}
+    lockOnBoard: 0
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0

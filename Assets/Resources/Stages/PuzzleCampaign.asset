@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: PuzzleCampaign
   m_EditorClassIdentifier: 
   stages:
-  - {fileID: 11400000, guid: b45afb5760076be4aaec2cd1e4076abe, type: 2}
   - {fileID: 11400000, guid: c3011111111141118111111111111111, type: 2}
   - {fileID: 11400000, guid: c3022222222242228222222222222222, type: 2}
   - {fileID: 11400000, guid: c3033333333343338333333333333333, type: 2}
@@ -21,8 +20,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8f2e84aaf0f64714580d809595594d12, type: 2}
   - {fileID: 11400000, guid: 70648b9b08ab1be48a083d13d3a6f032, type: 2}
   - {fileID: 11400000, guid: 7faff26fe9b5157448a5faf7172d0049, type: 2}
-  - {fileID: 11400000, guid: 692b4c6618c8ade499985c9f2c1bcfde, type: 2}
   - {fileID: 11400000, guid: a80231f7028c79049936f340aa979472, type: 2}
+  - {fileID: 11400000, guid: 5ea24283a64075e4980928ccd7cdbccd, type: 2}
   - {fileID: 11400000, guid: da6487a181bb3c249aa2f165dab5bbaa, type: 2}
   - {fileID: 11400000, guid: 5ef7fd37b1fb33242bf7b4dab5eefa90, type: 2}
-  - {fileID: 11400000, guid: cd97994855875dc459c4615c850363a3, type: 2}
+  - {fileID: 11400000, guid: b45afb5760076be4aaec2cd1e4076abe, type: 2}

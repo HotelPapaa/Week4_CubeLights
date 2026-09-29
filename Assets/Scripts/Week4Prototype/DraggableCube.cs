@@ -48,7 +48,7 @@ namespace GameLab.Week4
             }
         }
 
-        /// <summary>격자 외곽의 고정 Reserve 큐브는 드래그와 회전을 모두 받지 않는다.</summary>
+        /// <summary>Reserve 또는 보드 고정 큐브가 드래그와 회전을 받지 않도록 설정한다.</summary>
         public void SetInteractionLocked(bool locked)
         {
             interactionLocked = locked;
