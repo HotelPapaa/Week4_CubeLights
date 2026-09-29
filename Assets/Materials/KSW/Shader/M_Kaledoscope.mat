@@ -37,10 +37,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Rotation: 0
-    - _Segments: 2
-    - _Strength: 0
-    - _Zoom: 1
+    - _Rotation: 90.71
+    - _Segments: 90.71
+    - _Strength: 1
+    - _Zoom: 0.01
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1
