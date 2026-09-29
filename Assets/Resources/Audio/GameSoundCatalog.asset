@@ -21,10 +21,11 @@ MonoBehaviour:
   entries:
   - eventId: 1
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: c1cea40cb70e8384f859d58a2014a807, type: 3}
     output: {fileID: 0}
     volume: 0.72
-    pitchRange: {x: 0.96, y: 1.04}
+    pitchRange: {x: 1.3, y: 1.3}
     syncDelay: 0
     clipStartOffset: 0
     spatialBlend: 1
@@ -41,7 +42,7 @@ MonoBehaviour:
     - {fileID: 8300000, guid: c1cea40cb70e8384f859d58a2014a807, type: 3}
     output: {fileID: 0}
     volume: 0.9
-    pitchRange: {x: 0.94, y: 1.06}
+    pitchRange: {x: 1, y: 1}
     syncDelay: 0
     clipStartOffset: 0
     spatialBlend: 1
@@ -70,7 +71,8 @@ MonoBehaviour:
     fadeOut: 0.1
   - eventId: 4
     bus: 3
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 8176551babb7f2446907e06109b65801, type: 3}
     output: {fileID: 0}
     volume: 0.64
     pitchRange: {x: 0.97, y: 1.03}
@@ -135,10 +137,10 @@ MonoBehaviour:
   - eventId: 8
     bus: 3
     clips:
-    - {fileID: 8300000, guid: 8fc8a9723fd2e97408d1744e05f67b3b, type: 3}
+    - {fileID: 8300000, guid: 7cf1250d865f500408c3ade4aea01ef6, type: 3}
     output: {fileID: 0}
     volume: 0.8
-    pitchRange: {x: 0.96, y: 1.04}
+    pitchRange: {x: 2.5, y: 2.5}
     syncDelay: 0
     clipStartOffset: 0
     spatialBlend: 1
@@ -313,7 +315,8 @@ MonoBehaviour:
     fadeOut: 0.06
   - eventId: 19
     bus: 4
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 49b30b5787eb4ae4981bd62fc2676f5d, type: 3}
     output: {fileID: 0}
     volume: 0.7
     pitchRange: {x: 0.98, y: 1.02}
@@ -345,7 +348,8 @@ MonoBehaviour:
     fadeOut: 0.8
   - eventId: 21
     bus: 2
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: c44246981eaf9ca4bb50c5d1c436d14a, type: 3}
     output: {fileID: 0}
     volume: 0.55
     pitchRange: {x: 1, y: 1}
