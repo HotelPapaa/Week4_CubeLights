@@ -25,6 +25,8 @@ namespace GameLab.Week4
         public bool IsPlaced { get; private set; }
         public Vector2Int Cell { get; private set; }
         public bool InteractionLocked => interactionLocked;
+        public GridBoard Board => board;
+        public Quaternion TargetRotation => targetRotation;
 
         private void Awake()
         {
@@ -174,12 +176,50 @@ namespace GameLab.Week4
             IsPlaced = false;
         }
 
+        /// <summary>
+        /// 무르기에서 저장한 위치·회전·격자 상태를 즉시 복원한다.
+        /// 보드 스택 등록은 적층 순서대로 처리해야 하므로 PrototypeGameManager가 별도로 수행한다.
+        /// </summary>
+        public void RestoreUndoState(
+            bool isPlaced,
+            Vector2Int cell,
+            Vector3 worldPosition,
+            Quaternion rotation)
+        {
+            StopMovementAnimations();
+            IsPlaced = isPlaced;
+            Cell = cell;
+            transform.SetPositionAndRotation(worldPosition, rotation);
+            targetRotation = rotation;
+        }
+
         /// <summary>이전 버전에서 만든 씬처럼 참조가 비어 있으면 현재 씬의 격자를 자동으로 찾는다.</summary>
         private void ResolveBoardReference()
         {
             if (board == null)
             {
                 board = FindFirstObjectByType<GridBoard>();
+            }
+        }
+
+        private void StopMovementAnimations()
+        {
+            if (returnCoroutine != null)
+            {
+                StopCoroutine(returnCoroutine);
+                returnCoroutine = null;
+            }
+
+            if (rotationCoroutine != null)
+            {
+                StopCoroutine(rotationCoroutine);
+                rotationCoroutine = null;
+            }
+
+            if (fallCoroutine != null)
+            {
+                StopCoroutine(fallCoroutine);
+                fallCoroutine = null;
             }
         }
 

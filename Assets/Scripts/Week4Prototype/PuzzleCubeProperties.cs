@@ -68,6 +68,7 @@ namespace GameLab.Week4
                                             cubeType == PuzzleCubeType.ColoredGlass ||
                                             cubeType == PuzzleCubeType.Ice);
         public PuzzleLightColor LightColor => lightColor;
+        public bool RemovedByRule => removedByRule;
 
         private void Awake()
         {
@@ -234,6 +235,13 @@ namespace GameLab.Week4
 
             draggableCube.RemoveFromBoardForRule(animateCollapse);
             gameObject.SetActive(false);
+        }
+
+        /// <summary>무르기 스냅숏에 저장된 규칙 제거 상태와 활성 상태를 복원한다.</summary>
+        public void RestoreUndoState(bool wasRemovedByRule, bool wasActive)
+        {
+            removedByRule = wasRemovedByRule;
+            gameObject.SetActive(wasActive);
         }
 
         private Vector3Int TransformLocalDirection(Vector3Int localDirection, Transform boardTransform)

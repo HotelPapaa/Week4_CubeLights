@@ -14,6 +14,9 @@ namespace GameLab.Week4
         [SerializeField] private bool showInstructionOverlay = true;
         [SerializeField] private LightPuzzleVisualizer lightVisualizer;
 
+        [Header("무르기")]
+        [Min(1)] [SerializeField] private int undoCapacity = 30;
+
         private DraggableCube selectedCube;
         private DraggableCube hoveredCube;
         private PuzzleStageDefinition currentStage;
@@ -22,10 +25,30 @@ namespace GameLab.Week4
         private bool isDragging;
         private bool hasWon;
         private bool interactionEnabled = true;
+        private readonly Stack<BoardUndoSnapshot> undoHistory = new();
+        private BoardUndoSnapshot pendingDragSnapshot;
+
+        private sealed class CubeUndoState
+        {
+            public DraggableCube Cube;
+            public bool WasActive;
+            public bool WasRemovedByRule;
+            public bool WasPlaced;
+            public Vector2Int Cell;
+            public int StackIndex;
+            public Vector3 WorldPosition;
+            public Quaternion Rotation;
+        }
+
+        private sealed class BoardUndoSnapshot
+        {
+            public readonly List<CubeUndoState> Cubes = new();
+        }
 
         public bool IsCurrentStageSolved => hasWon;
         public LightSimulationResult LastLightResult => lastLightResult;
         public Camera PlayerCamera => playerCamera;
+        public bool CanOrbitCamera => interactionEnabled && !isDragging;
 
         public void Initialize(GridBoard targetBoard, Camera targetCamera, int[] target)
         {
@@ -55,6 +78,7 @@ namespace GameLab.Week4
         /// <summary>StageManager가 새 전등 목표를 전달하고 표시 시스템을 같은 보드에 연결한다.</summary>
         public void ConfigureStage(PuzzleStageDefinition stage)
         {
+            ClearUndoHistory();
             currentStage = stage;
             lastLightResult = null;
             latchedLampKeys.Clear();
@@ -101,6 +125,8 @@ namespace GameLab.Week4
             {
                 selectedCube.EndDrag();
                 isDragging = false;
+                CommitUndoSnapshot(pendingDragSnapshot);
+                pendingDragSnapshot = null;
             }
 
             interactionEnabled = enabled;
@@ -164,6 +190,7 @@ namespace GameLab.Week4
             {
                 if (TryGetCubeUnderPointer(pointer, out DraggableCube cube))
                 {
+                    pendingDragSnapshot = CaptureBoardState();
                     selectedCube = cube;
                     SoundManager.Play(SoundEventId.CubePickup, selectedCube.transform.position);
                     selectedCube.BeginDrag();
@@ -201,6 +228,8 @@ namespace GameLab.Week4
                 }
 
                 isDragging = false;
+                CommitUndoSnapshot(pendingDragSnapshot);
+                pendingDragSnapshot = null;
             }
         }
 
@@ -238,8 +267,177 @@ namespace GameLab.Week4
         {
             if (hoveredCube == null) return;
 
+            BoardUndoSnapshot beforeRotation = CaptureBoardState();
             SoundManager.Play(SoundEventId.CubeRotate, hoveredCube.transform.position);
             hoveredCube.RotateBy(axis, degrees);
+            CommitUndoSnapshot(beforeRotation);
+        }
+
+        /// <summary>
+        /// 마지막으로 완료한 큐브 이동 또는 회전 한 번을 되돌린다.
+        /// 적층 붕괴와 규칙 제거까지 함께 복구하기 위해 전체 보드 스냅숏을 사용한다.
+        /// </summary>
+        public bool UndoLastAction()
+        {
+            if (!interactionEnabled || isDragging || board == null || undoHistory.Count == 0)
+            {
+                return false;
+            }
+
+            BoardUndoSnapshot snapshot = undoHistory.Pop();
+            RestoreBoardState(snapshot);
+            return true;
+        }
+
+        /// <summary>스테이지를 불러오거나 다시 시작할 때 이전 스테이지의 참조를 모두 버린다.</summary>
+        public void ClearUndoHistory()
+        {
+            undoHistory.Clear();
+            pendingDragSnapshot = null;
+        }
+
+        private BoardUndoSnapshot CaptureBoardState()
+        {
+            var snapshot = new BoardUndoSnapshot();
+            if (board == null) return snapshot;
+
+            DraggableCube[] cubes = FindObjectsByType<DraggableCube>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (DraggableCube cube in cubes)
+            {
+                if (cube == null || cube.Board != board || cube.gameObject.scene != gameObject.scene)
+                {
+                    continue;
+                }
+
+                PuzzleCubeProperties properties = cube.GetComponent<PuzzleCubeProperties>();
+                bool removedByRule = properties != null && properties.RemovedByRule;
+                // 비활성화된 레거시 원본은 제외하고, 규칙에 의해 사라진 런타임 큐브만 기록한다.
+                if (!cube.gameObject.activeInHierarchy && !removedByRule)
+                {
+                    continue;
+                }
+
+                snapshot.Cubes.Add(new CubeUndoState
+                {
+                    Cube = cube,
+                    WasActive = cube.gameObject.activeSelf,
+                    WasRemovedByRule = removedByRule,
+                    WasPlaced = cube.IsPlaced,
+                    Cell = cube.Cell,
+                    StackIndex = board.GetStackIndex(cube),
+                    WorldPosition = cube.transform.position,
+                    Rotation = cube.TargetRotation
+                });
+            }
+
+            return snapshot;
+        }
+
+        private void CommitUndoSnapshot(BoardUndoSnapshot beforeAction)
+        {
+            if (beforeAction == null || !HasBoardStateChanged(beforeAction)) return;
+
+            undoHistory.Push(beforeAction);
+            int capacity = Mathf.Max(1, undoCapacity);
+            while (undoHistory.Count > capacity)
+            {
+                // Stack은 오래된 항목을 직접 제거할 수 없으므로 최신 항목만 용량만큼 다시 쌓는다.
+                BoardUndoSnapshot[] newestFirst = undoHistory.ToArray();
+                undoHistory.Clear();
+                int keepCount = Mathf.Min(capacity, newestFirst.Length);
+                for (int index = keepCount - 1; index >= 0; index--)
+                {
+                    undoHistory.Push(newestFirst[index]);
+                }
+            }
+        }
+
+        private bool HasBoardStateChanged(BoardUndoSnapshot beforeAction)
+        {
+            BoardUndoSnapshot afterAction = CaptureBoardState();
+            if (beforeAction.Cubes.Count != afterAction.Cubes.Count) return true;
+
+            var afterById = new Dictionary<int, CubeUndoState>();
+            foreach (CubeUndoState state in afterAction.Cubes)
+            {
+                if (state.Cube != null) afterById[state.Cube.GetInstanceID()] = state;
+            }
+
+            foreach (CubeUndoState before in beforeAction.Cubes)
+            {
+                if (before.Cube == null ||
+                    !afterById.TryGetValue(before.Cube.GetInstanceID(), out CubeUndoState after))
+                {
+                    return true;
+                }
+
+                if (before.WasActive != after.WasActive ||
+                    before.WasRemovedByRule != after.WasRemovedByRule ||
+                    before.WasPlaced != after.WasPlaced ||
+                    before.Cell != after.Cell ||
+                    before.StackIndex != after.StackIndex ||
+                    Mathf.Abs(Quaternion.Dot(before.Rotation, after.Rotation)) < 0.9999f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void RestoreBoardState(BoardUndoSnapshot snapshot)
+        {
+            board.CancelLightEffects();
+            board.ResetBoard();
+
+            var placedCubes = new List<CubeUndoState>();
+            foreach (CubeUndoState state in snapshot.Cubes)
+            {
+                if (state.Cube == null) continue;
+
+                PuzzleCubeProperties properties = state.Cube.GetComponent<PuzzleCubeProperties>();
+                if (properties != null)
+                {
+                    properties.RestoreUndoState(state.WasRemovedByRule, state.WasActive);
+                }
+                else
+                {
+                    state.Cube.gameObject.SetActive(state.WasActive);
+                }
+
+                state.Cube.RestoreUndoState(
+                    state.WasPlaced,
+                    state.Cell,
+                    state.WorldPosition,
+                    state.Rotation);
+
+                if (!state.WasActive) continue;
+                if (state.WasPlaced) placedCubes.Add(state);
+                else if (state.Cube.InteractionLocked) board.RegisterExternalCube(state.Cube);
+            }
+
+            placedCubes.Sort((left, right) =>
+            {
+                int cellX = left.Cell.x.CompareTo(right.Cell.x);
+                if (cellX != 0) return cellX;
+                int cellY = left.Cell.y.CompareTo(right.Cell.y);
+                return cellY != 0 ? cellY : left.StackIndex.CompareTo(right.StackIndex);
+            });
+
+            foreach (CubeUndoState state in placedCubes)
+            {
+                state.Cube.SnapImmediately(board.PlaceCube(state.Cube, state.Cell));
+            }
+
+            selectedCube = null;
+            hoveredCube = null;
+            lastLightResult = null;
+            latchedLampKeys.Clear();
+            hasWon = false;
+            lightVisualizer?.ResetLightAttempt();
+            SoundManager.Play(SoundEventId.CubeReturn);
         }
 
         /// <summary>
@@ -341,7 +539,7 @@ namespace GameLab.Week4
 
             string message = hasWon
                 ? "완성! 모든 전등에 올바른 빛이 정면으로 들어왔습니다."
-                : "큐브: 마우스로 드래그 / 커서를 올리고 W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\nSpace: 점등하고 전등 결과 확인";
+                : "큐브: 마우스로 드래그 / 커서를 올리고 W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\n휠: 카메라 회전 / R: 다시 시작 / Z: 무르기 / Space: 점등";
             Rect panelRect = new Rect(20, 20, 500, 78);
 
             // 흰색 기본 텍스처에 색만 입혀 반투명 패널 배경을 그린다.

@@ -11,9 +11,14 @@ namespace GameLab.Week4
     public sealed class LightingSequenceController : MonoBehaviour
     {
         private const string ActionPath = "Player/TurnOnLight";
+        private const string RotateCameraActionPath = "Player/RotateCamera";
+        private const string RestartActionPath = "Player/Restart";
+        private const string UndoActionPath = "Player/Undo";
 
         [Header("Input System")]
         [SerializeField] private InputActionAsset inputActions;
+        [Min(0.01f)] [SerializeField] private float scrollThreshold = 0.01f;
+        [Min(0f)] [SerializeField] private float scrollCooldown = 0.08f;
 
         [Header("연출 연결")]
         [SerializeField] private Camera playerCamera;
@@ -31,11 +36,18 @@ namespace GameLab.Week4
 
 
         private CinemachineCamera[] sceneCameras;
+        private CinemachineCamera[] orbitCameras;
         private CinemachineCamera currentCamera;
-        private int orbitCameraIndex;
+        private float nextOrbitInputTime;
 
         private InputAction turnOnLightAction;
-        private bool ownsFallbackAction;
+        private InputAction rotateCameraAction;
+        private InputAction restartAction;
+        private InputAction undoAction;
+        private bool ownsTurnOnLightAction;
+        private bool ownsRotateCameraAction;
+        private bool ownsRestartAction;
+        private bool ownsUndoAction;
         private bool isLightOn;
 
         public event Action<bool> LightStateChanged;
@@ -75,19 +87,7 @@ namespace GameLab.Week4
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null) return;
 
-            if (keyboard.rKey.wasPressedThisFrame)
-            {
-                int nextIndex = (orbitCameraIndex + 1) % 4;
-                CinemachineCamera nextCamera = nextIndex switch
-                {
-                    1 => RightCamera,
-                    2 => TopCamera,
-                    3 => LeftCamera,
-                    _ => defaultCamera
-                };
-                if (SelectCamera(nextCamera)) orbitCameraIndex = nextIndex;
-            }
-            else if (keyboard.tKey.wasPressedThisFrame)
+            if (keyboard.tKey.wasPressedThisFrame)
             {
                 if (RuleCamera != null && currentCamera == RuleCamera)
                 {
@@ -105,27 +105,73 @@ namespace GameLab.Week4
             ReleaseInputAction();
 
             turnOnLightAction = inputActions != null ? inputActions.FindAction(ActionPath, false) : null;
-            ownsFallbackAction = turnOnLightAction == null;
+            ownsTurnOnLightAction = turnOnLightAction == null;
 
             // 씬 직렬화가 아직 끝나지 않은 경우에도 동일한 Input System 바인딩으로 안전하게 작동한다.
-            if (ownsFallbackAction)
+            if (ownsTurnOnLightAction)
             {
                 turnOnLightAction = new InputAction("TurnOnLight", InputActionType.Button, "<Keyboard>/space");
             }
 
+            rotateCameraAction = inputActions != null
+                ? inputActions.FindAction(RotateCameraActionPath, false)
+                : null;
+            ownsRotateCameraAction = rotateCameraAction == null;
+            if (ownsRotateCameraAction)
+            {
+                rotateCameraAction = new InputAction(
+                    "RotateCamera",
+                    InputActionType.PassThrough,
+                    "<Mouse>/scroll/y");
+            }
+
+            restartAction = inputActions != null ? inputActions.FindAction(RestartActionPath, false) : null;
+            ownsRestartAction = restartAction == null;
+            if (ownsRestartAction)
+            {
+                restartAction = new InputAction("Restart", InputActionType.Button, "<Keyboard>/r");
+            }
+
+            undoAction = inputActions != null ? inputActions.FindAction(UndoActionPath, false) : null;
+            ownsUndoAction = undoAction == null;
+            if (ownsUndoAction)
+            {
+                undoAction = new InputAction("Undo", InputActionType.Button, "<Keyboard>/z");
+            }
+
             turnOnLightAction.performed += HandleTurnOnLight;
+            rotateCameraAction.performed += HandleRotateCamera;
+            restartAction.performed += HandleRestart;
+            undoAction.performed += HandleUndo;
             turnOnLightAction.Enable();
+            rotateCameraAction.Enable();
+            restartAction.Enable();
+            undoAction.Enable();
         }
 
         private void ReleaseInputAction()
         {
-            if (turnOnLightAction == null) return;
+            ReleaseAction(ref turnOnLightAction, HandleTurnOnLight, ownsTurnOnLightAction);
+            ReleaseAction(ref rotateCameraAction, HandleRotateCamera, ownsRotateCameraAction);
+            ReleaseAction(ref restartAction, HandleRestart, ownsRestartAction);
+            ReleaseAction(ref undoAction, HandleUndo, ownsUndoAction);
+            ownsTurnOnLightAction = false;
+            ownsRotateCameraAction = false;
+            ownsRestartAction = false;
+            ownsUndoAction = false;
+        }
 
-            turnOnLightAction.performed -= HandleTurnOnLight;
-            turnOnLightAction.Disable();
-            if (ownsFallbackAction) turnOnLightAction.Dispose();
-            turnOnLightAction = null;
-            ownsFallbackAction = false;
+        private static void ReleaseAction(
+            ref InputAction action,
+            Action<InputAction.CallbackContext> handler,
+            bool ownsAction)
+        {
+            if (action == null) return;
+
+            action.performed -= handler;
+            action.Disable();
+            if (ownsAction) action.Dispose();
+            action = null;
         }
 
         private void ApplyInitialState()
@@ -170,6 +216,59 @@ namespace GameLab.Week4
             }
         }
 
+        private void HandleRotateCamera(InputAction.CallbackContext context)
+        {
+            if (!context.performed || isLightOn || gameManager == null || !gameManager.CanOrbitCamera)
+            {
+                return;
+            }
+
+            float scroll = context.ReadValue<float>();
+            if (Mathf.Abs(scroll) < scrollThreshold || Time.unscaledTime < nextOrbitInputTime)
+            {
+                return;
+            }
+
+            // Unity Input System에서 휠 위는 양수다. 양수는 반시계, 음수는 시계 방향이다.
+            RotateOrbitCamera(scroll > 0f ? 1 : -1);
+            nextOrbitInputTime = Time.unscaledTime + scrollCooldown;
+        }
+
+        private void HandleRestart(InputAction.CallbackContext context)
+        {
+            if (!context.performed) return;
+
+            StageManager stageManager = FindFirstObjectByType<StageManager>();
+            stageManager?.RestartStage();
+        }
+
+        private void HandleUndo(InputAction.CallbackContext context)
+        {
+            if (!context.performed) return;
+            gameManager?.UndoLastAction();
+        }
+
+        private void RotateOrbitCamera(int direction)
+        {
+            if (direction == 0) return;
+            if (orbitCameras == null || orbitCameras.Length == 0) ResolveSceneCameras();
+            if (orbitCameras == null || orbitCameras.Length == 0) return;
+
+            int currentIndex = Array.IndexOf(orbitCameras, currentCamera);
+            if (currentIndex < 0) return;
+
+            for (int offset = 1; offset <= orbitCameras.Length; offset++)
+            {
+                int nextIndex = (currentIndex + direction * offset + orbitCameras.Length * 2) %
+                                orbitCameras.Length;
+                CinemachineCamera nextCamera = orbitCameras[nextIndex];
+                if (nextCamera != null && SelectCamera(nextCamera))
+                {
+                    return;
+                }
+            }
+        }
+
         private void TurnOffLight()
         {
             isLightOn = false;
@@ -205,7 +304,6 @@ namespace GameLab.Week4
 
         private void SetCameraState(bool showStage)
         {
-            if (!showStage) orbitCameraIndex = 0;
             if (defaultCamera != null)
             {
                 SelectCamera(showStage ? StageCIneCamera : defaultCamera);
@@ -251,6 +349,8 @@ namespace GameLab.Week4
                 }
             }
 
+            // 위에서 보았을 때 반시계 순서. 휠 아래 입력은 이 배열을 역방향으로 순회한다.
+            orbitCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera };
             sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera, EasterEggCamera };
         }
 

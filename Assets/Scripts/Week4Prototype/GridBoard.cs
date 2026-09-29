@@ -277,6 +277,21 @@ namespace GameLab.Week4
             return stacks.TryGetValue(cell, out List<DraggableCube> stack) ? stack.Count : 0;
         }
 
+        /// <summary>
+        /// 무르기 기록에서 같은 칸의 적층 순서를 보존할 수 있도록 큐브의 현재 층 번호를 반환한다.
+        /// 격자에 등록되지 않은 큐브는 -1이다.
+        /// </summary>
+        public int GetStackIndex(DraggableCube cube)
+        {
+            if (cube == null || !cube.IsPlaced ||
+                !stacks.TryGetValue(cube.Cell, out List<DraggableCube> stack))
+            {
+                return -1;
+            }
+
+            return stack.IndexOf(cube);
+        }
+
         /// <summary>격자 좌표와 층으로 큐브를 찾는다. 빈 공간이면 null을 반환한다.</summary>
         public DraggableCube GetCubeAt(Vector3Int gridPosition)
         {
