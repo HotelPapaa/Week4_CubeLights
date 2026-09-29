@@ -27,6 +27,7 @@ namespace GameLab.Week4
         private bool interactionEnabled = true;
         private readonly Stack<BoardUndoSnapshot> undoHistory = new();
         private BoardUndoSnapshot pendingDragSnapshot;
+        private BoardUndoSnapshot lightAttemptSnapshot;
 
         private sealed class CubeUndoState
         {
@@ -151,6 +152,28 @@ namespace GameLab.Week4
         public void CancelLightEffects()
         {
             board?.CancelLightEffects();
+        }
+
+        /// <summary>레이저가 보드 상태를 바꾸기 직전의 배치를 별도로 보관한다.</summary>
+        public void CaptureLightAttemptState()
+        {
+            lightAttemptSnapshot = CaptureBoardState();
+        }
+
+        /// <summary>일반 무르기 기록을 소비하지 않고 레이저 발사 직전 배치로 복원한다.</summary>
+        public bool RestoreLightAttemptState()
+        {
+            if (board == null || lightAttemptSnapshot == null) return false;
+
+            BoardUndoSnapshot snapshot = lightAttemptSnapshot;
+            lightAttemptSnapshot = null;
+            RestoreBoardState(snapshot);
+            return true;
+        }
+
+        public void DiscardLightAttemptState()
+        {
+            lightAttemptSnapshot = null;
         }
 
         private void OnEnable()
@@ -294,6 +317,7 @@ namespace GameLab.Week4
         {
             undoHistory.Clear();
             pendingDragSnapshot = null;
+            lightAttemptSnapshot = null;
         }
 
         private BoardUndoSnapshot CaptureBoardState()

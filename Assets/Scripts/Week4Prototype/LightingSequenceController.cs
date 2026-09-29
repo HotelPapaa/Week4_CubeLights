@@ -199,6 +199,7 @@ namespace GameLab.Week4
             isLightOn = true;
             SoundManager.Play(SoundEventId.LightOn);
             gameManager?.SetInteractionEnabled(false);
+            gameManager?.CaptureLightAttemptState();
 
             // 성공 판정 전에는 현재 플레이어 시점을 유지한 채 광선과 연쇄 반응을 관찰한다.
             gameManager?.SetLightVisualizationVisible(true);
@@ -241,8 +242,17 @@ namespace GameLab.Week4
 
         private void HandleUndo(InputAction.CallbackContext context)
         {
-            if (!context.performed) return;
-            gameManager?.UndoLastAction();
+            if (!context.performed || gameManager == null) return;
+
+            // 점등 중에는 일반 무르기 기록을 소비하지 않고 레이저 직전의 별도 스냅숏으로 복귀한다.
+            if (isLightOn)
+            {
+                TurnOffLight(preserveLightAttemptState: true);
+                gameManager.RestoreLightAttemptState();
+                return;
+            }
+
+            gameManager.UndoLastAction();
         }
 
         private void RotateOrbitCamera(int direction)
@@ -266,7 +276,7 @@ namespace GameLab.Week4
             }
         }
 
-        private void TurnOffLight()
+        private void TurnOffLight(bool preserveLightAttemptState = false)
         {
             isLightOn = false;
             SoundManager.Play(SoundEventId.LightOff);
@@ -274,6 +284,7 @@ namespace GameLab.Week4
             if (IsStageViewActive()) SetCameraState(showStage: false);
             gameManager?.ResetLightAttempt();
             gameManager?.SetInteractionEnabled(true);
+            if (!preserveLightAttemptState) gameManager?.DiscardLightAttemptState();
             LightStateChanged?.Invoke(false);
         }
 
@@ -290,6 +301,7 @@ namespace GameLab.Week4
             SetCameraState(showStage: false);
             gameManager?.ResetLightAttempt();
             gameManager?.SetInteractionEnabled(true);
+            gameManager?.DiscardLightAttemptState();
             LightStateChanged?.Invoke(false);
         }
 
