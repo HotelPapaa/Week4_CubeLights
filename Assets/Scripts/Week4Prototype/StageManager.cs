@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -41,6 +42,8 @@ namespace GameLab.Week4
         public PuzzleStageDefinition CurrentStage => currentStage;
         public int CurrentStageIndex => currentStageIndex;
         public bool StageSolved => stageSolved;
+        public event Action<int> StageLoaded;
+        public event Action<int> StageCleared;
 
         public void Initialize(
             PuzzleCampaign targetCampaign,
@@ -94,7 +97,10 @@ namespace GameLab.Week4
             hasStarted = true;
             if (board == null) board = FindFirstObjectByType<GridBoard>();
             if (gameManager == null) gameManager = FindFirstObjectByType<PrototypeGameManager>();
-            if (lightingController == null) BindLightingController(FindFirstObjectByType<LightingSequenceController>());
+            BindLightingController(
+                lightingController != null
+                    ? lightingController
+                    : FindFirstObjectByType<LightingSequenceController>());
 
             if (legacyCubeRoot != null)
             {
@@ -188,6 +194,7 @@ namespace GameLab.Week4
                 ? SoundEventId.StageRestart
                 : SoundEventId.StageLoad);
             Debug.Log($"스테이지 로드: {currentStageIndex + 1}. {currentStage.DisplayName}", this);
+            StageLoaded?.Invoke(currentStageIndex);
         }
 
         /// <summary>
@@ -352,6 +359,7 @@ namespace GameLab.Week4
         {
             if (currentStage == null || board == null) return;
 
+            bool wasSolved = stageSolved;
             stageSolved = gameManager != null && gameManager.IsCurrentStageSolved;
             if (stageSolved)
             {
@@ -360,6 +368,11 @@ namespace GameLab.Week4
                 {
                     PlayerPrefs.SetInt(ProgressKey, currentStageIndex);
                     PlayerPrefs.Save();
+                }
+
+                if (!wasSolved)
+                {
+                    StageCleared?.Invoke(currentStageIndex);
                 }
             }
         }

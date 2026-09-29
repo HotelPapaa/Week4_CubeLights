@@ -11459,15 +11459,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5689451069236139129, guid: 0ef3195e76c900048a75314be680247c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 33.827
+      value: 34.025
       objectReference: {fileID: 0}
     - target: {fileID: 5689451069236139129, guid: 0ef3195e76c900048a75314be680247c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.56
+      value: 0.027
       objectReference: {fileID: 0}
     - target: {fileID: 5689451069236139129, guid: 0ef3195e76c900048a75314be680247c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.398
+      value: 0.846
       objectReference: {fileID: 0}
     - target: {fileID: 5689451069236139129, guid: 0ef3195e76c900048a75314be680247c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -14203,6 +14203,59 @@ Transform:
   - {fileID: 1715253497}
   m_Father: {fileID: 93324949}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2100000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2100000002}
+  - component: {fileID: 2100000003}
+  m_Layer: 0
+  m_Name: KeyCubeSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2100000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 34.608, y: 0.661, z: -0.08196497}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2100000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4d1f7238c6e4ab7a9f0512cde834690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stageManager: {fileID: 0}
+  lightingController: {fileID: 0}
+  keyCubePlacerHolder: {fileID: 0}
+  keyCubePrefab: {fileID: 6189360690847491035, guid: 419760ca7859c2a4b87126f5d18c0766, type: 3}
+  readyMaterial: {fileID: 2100000, guid: f6081c075c5f80c47b08b934ce80d531, type: 2}
+  occupiedMaterial: {fileID: 2100000, guid: 694d948b155e8d640a8c54fd97dc7bb6, type: 2}
+  spawnDelayAfterClear: 1
+  readyBlinkInterval: 0.25
+  placementMargin: 0.08
 --- !u!1001 &2147100532
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15048,3 +15101,4 @@ SceneRoots:
   - {fileID: 1081279347}
   - {fileID: 1757087805}
   - {fileID: 1730545040}
+  - {fileID: 2100000002}
