@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -136,21 +137,28 @@ namespace GameLab.Week4
         }
 
         /// <summary>현재 광선 경로와 각 전등의 성공·오입사 상태를 갱신한다.</summary>
-        public void ShowResult(LightSimulationResult result)
+        public void ShowResult(LightSimulationResult result, Action onBeamPlaybackCompleted = null)
         {
             lastResult = result;
             EnsureRoots();
             EnsureLaserPointer();
             ClearBeamVisuals();
 
-            if (result == null || board == null) return;
+            if (result == null || board == null)
+            {
+                onBeamPlaybackCompleted?.Invoke();
+                return;
+            }
+
+            bool completesImmediately = false;
             if (laserPointer != null && laserPointer.CanRender)
             {
-                laserPointer.Play(result.Segments, ResolveBeamEndPosition);
+                laserPointer.Play(result.Segments, ResolveBeamEndPosition, onBeamPlaybackCompleted);
             }
             else
             {
                 CreateLineBeams(result.Segments);
+                completesImmediately = true;
             }
 
             for (int index = 0; index < lampRenderers.Count; index++)
@@ -179,6 +187,10 @@ namespace GameLab.Week4
             }
 
             beamRoot.gameObject.SetActive(beamsVisible);
+            if (completesImmediately)
+            {
+                onBeamPlaybackCompleted?.Invoke();
+            }
         }
 
         /// <summary>스페이스바 결과 화면에서는 광선만 켜고 끈다. 목표 전등판은 항상 보인다.</summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Cinemachine;
@@ -24,6 +25,8 @@ namespace GameLab.Week4
         [SerializeField] private Camera playerCamera;
         [SerializeField] private Camera stageCamera;
         [SerializeField] private PrototypeGameManager gameManager;
+        [Tooltip("마지막 레이저가 도착한 뒤 Stage Camera로 전환하기 전까지 유지할 시간")]
+        [Min(0f)] [SerializeField] private float stageClearLaserHoldDuration = 0.5f;
 
         [Header("시네머신 카메라들")]
         [SerializeField] public CinemachineCamera defaultCamera;
@@ -39,6 +42,7 @@ namespace GameLab.Week4
         private CinemachineCamera[] orbitCameras;
         private CinemachineCamera currentCamera;
         private float nextOrbitInputTime;
+        private Coroutine stageClearTransitionCoroutine;
 
         private InputAction turnOnLightAction;
         private InputAction rotateCameraAction;
@@ -79,6 +83,7 @@ namespace GameLab.Week4
 
         private void OnDisable()
         {
+            CancelStageClearTransition();
             ReleaseInputAction();
         }
 
@@ -278,6 +283,7 @@ namespace GameLab.Week4
 
         private void TurnOffLight(bool preserveLightAttemptState = false)
         {
+            CancelStageClearTransition();
             isLightOn = false;
             SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
@@ -291,6 +297,7 @@ namespace GameLab.Week4
         /// <summary>스테이지 로드·재시작 시 점등 여부와 관계없이 조작 화면으로 복귀한다.</summary>
         public void ResetToPlayerView()
         {
+            CancelStageClearTransition();
             bool wasLightOn = isLightOn;
             isLightOn = false;
             if (wasLightOn)
@@ -312,10 +319,35 @@ namespace GameLab.Week4
             // 얼음 용해와 낙하까지 반영된 최종 결과가 성공일 때만 전등판 카메라로 전환한다.
             if (gameManager != null && gameManager.IsCurrentStageSolved)
             {
-                SetCameraState(showStage: true);
+                CancelStageClearTransition();
+                stageClearTransitionCoroutine = StartCoroutine(CompleteStageClearTransition());
             }
 
             LightEffectsResolved?.Invoke();
+        }
+
+        private IEnumerator CompleteStageClearTransition()
+        {
+            float delay = Mathf.Max(0f, stageClearLaserHoldDuration);
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            stageClearTransitionCoroutine = null;
+            if (!isLightOn || gameManager == null || !gameManager.IsCurrentStageSolved) yield break;
+
+            // 마지막 전등 도착 장면을 잠시 유지한 뒤 레이저를 숨기고 결과 카메라로 전환한다.
+            gameManager.SetLightVisualizationVisible(false);
+            SetCameraState(showStage: true);
+        }
+
+        private void CancelStageClearTransition()
+        {
+            if (stageClearTransitionCoroutine == null) return;
+
+            StopCoroutine(stageClearTransitionCoroutine);
+            stageClearTransitionCoroutine = null;
         }
 
         private bool IsStageViewActive()

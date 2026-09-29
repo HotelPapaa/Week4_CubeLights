@@ -28,6 +28,9 @@ namespace GameLab.Week4
         private readonly Stack<BoardUndoSnapshot> undoHistory = new();
         private BoardUndoSnapshot pendingDragSnapshot;
         private BoardUndoSnapshot lightAttemptSnapshot;
+        private Action pendingLightEffectsCompleted;
+        private bool lightSimulationCompleted;
+        private bool lightPlaybackCompleted;
 
         private sealed class CubeUndoState
         {
@@ -136,22 +139,31 @@ namespace GameLab.Week4
         /// <summary>광선을 계산하고, 빛에 닿은 얼음의 지연 용해가 끝날 때까지 연쇄 반응을 실행한다.</summary>
         public void ApplyLightEffects(Action onCompleted = null)
         {
+            pendingLightEffectsCompleted = onCompleted;
+            lightSimulationCompleted = false;
+            lightPlaybackCompleted = false;
+
             if (board != null)
             {
                 board.ApplyLightEffects(
                     currentStage,
                     HandleLightSimulationStep,
-                    _ => onCompleted?.Invoke());
+                    _ => HandleLightSimulationCompleted());
             }
             else
             {
-                onCompleted?.Invoke();
+                lightSimulationCompleted = true;
+                lightPlaybackCompleted = true;
+                TryCompleteLightEffects();
             }
         }
 
         public void CancelLightEffects()
         {
             board?.CancelLightEffects();
+            pendingLightEffectsCompleted = null;
+            lightSimulationCompleted = false;
+            lightPlaybackCompleted = false;
         }
 
         /// <summary>레이저가 보드 상태를 바꾸기 직전의 배치를 별도로 보관한다.</summary>
@@ -507,6 +519,7 @@ namespace GameLab.Week4
 
         private void HandleLightSimulationStep(LightSimulationResult result)
         {
+            lightPlaybackCompleted = false;
             bool wasWon = hasWon;
             if (result != null)
             {
@@ -534,7 +547,35 @@ namespace GameLab.Week4
             {
                 SoundManager.Play(SoundEventId.PuzzleSolved);
             }
-            lightVisualizer?.ShowResult(result);
+            if (lightVisualizer != null)
+            {
+                lightVisualizer.ShowResult(result, HandleLightPlaybackCompleted);
+            }
+            else
+            {
+                HandleLightPlaybackCompleted();
+            }
+        }
+
+        private void HandleLightSimulationCompleted()
+        {
+            lightSimulationCompleted = true;
+            TryCompleteLightEffects();
+        }
+
+        private void HandleLightPlaybackCompleted()
+        {
+            lightPlaybackCompleted = true;
+            TryCompleteLightEffects();
+        }
+
+        private void TryCompleteLightEffects()
+        {
+            if (!lightSimulationCompleted || !lightPlaybackCompleted) return;
+
+            Action completed = pendingLightEffectsCompleted;
+            pendingLightEffectsCompleted = null;
+            completed?.Invoke();
         }
 
         private static string BuildLampKey(LampTarget lamp)

@@ -29,6 +29,7 @@ namespace GameLab.Week4
         private Transform laserRoot;
         private Coroutine shootCoroutine;
         private Func<LightBeamSegment, Vector3> resolveEndPosition;
+        private Action playbackCompleted;
         private SoundHandle laserSoundHandle;
 
         private sealed class BeamAnimation
@@ -57,12 +58,18 @@ namespace GameLab.Week4
         /// </summary>
         public void Play(
             IReadOnlyList<LightBeamSegment> route,
-            Func<LightBeamSegment, Vector3> endPositionResolver = null)
+            Func<LightBeamSegment, Vector3> endPositionResolver = null,
+            Action onCompleted = null)
         {
             Clear();
-            if (!CanRender || route == null || route.Count == 0) return;
+            if (!CanRender || route == null || route.Count == 0)
+            {
+                onCompleted?.Invoke();
+                return;
+            }
 
             resolveEndPosition = endPositionResolver;
+            playbackCompleted = onCompleted;
             soundedInteractionCells.Clear();
             laserRoot.gameObject.SetActive(true);
             laserSoundHandle = SoundManager.Play(
@@ -129,10 +136,12 @@ namespace GameLab.Week4
 
         private void StopPlayback()
         {
-            if (shootCoroutine == null) return;
-
-            StopCoroutine(shootCoroutine);
+            if (shootCoroutine != null)
+            {
+                StopCoroutine(shootCoroutine);
+            }
             shootCoroutine = null;
+            playbackCompleted = null;
         }
 
         private IEnumerator ShootLaser(IReadOnlyList<LightBeamSegment> route)
@@ -149,6 +158,9 @@ namespace GameLab.Week4
             }
 
             shootCoroutine = null;
+            Action completed = playbackCompleted;
+            playbackCompleted = null;
+            completed?.Invoke();
         }
 
         private IEnumerator AnimateSequenceStep(IReadOnlyList<LightBeamSegment> route, int sequenceStep)
