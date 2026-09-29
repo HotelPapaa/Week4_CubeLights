@@ -18,7 +18,7 @@ MonoBehaviour:
   gridSize: {x: 3, y: 5}
   cubeSpawns:
   - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
-    localPosition: {x: 0, y: 0, z: 0}
+    localPosition: {x: -0.15, y: 0, z: 0}
     localEulerAngles: {x: 0, y: 90, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
@@ -27,7 +27,7 @@ MonoBehaviour:
     reserveSlot: 2
     reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: -0.8, y: 0.09, z: 1.61}
+    localPosition: {x: -0.95, y: 0.09, z: 1.61}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
@@ -36,7 +36,7 @@ MonoBehaviour:
     reserveSlot: 1
     reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: -0.5, y: 0.09, z: 1.61}
+    localPosition: {x: -0.65, y: 0.09, z: 1.61}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}

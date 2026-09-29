@@ -552,8 +552,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89954096}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.33621362, y: -0.62206155, z: 0.3362135, w: 0.62206143}
-  m_LocalPosition: {x: 36.351974, y: 1.6544437, z: -0.08196497}
+  m_LocalRotation: {x: 0.38441652, y: -0.59395075, z: 0.38546214, w: 0.5923389}
+  m_LocalPosition: {x: 36.077774, y: 1.8831291, z: -0.00877893}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7083,8 +7083,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 902095947}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.006300477, w: 0.9999802}
-  m_LocalPosition: {x: 0.36, y: 0, z: -0.848}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.36, y: 0, z: -0.873}
   m_LocalScale: {x: 1.4007115, y: 0.029284833, z: 0.7429985}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8145,7 +8145,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1081279347
 Transform:
   m_ObjectHideFlags: 0
@@ -11986,8 +11986,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1831729221}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.006300477, w: 0.9999802}
-  m_LocalPosition: {x: 0.36, y: 0, z: -0.258}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.36, y: 0, z: -0.343}
   m_LocalScale: {x: 1.4007115, y: 0.029284833, z: 0.29571024}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12355,8 +12355,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1892735692}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.33621362, y: -0.62206155, z: 0.3362135, w: 0.62206143}
-  m_LocalPosition: {x: -0.096660614, y: -1.8604574, z: 1.3791175}
+  m_LocalRotation: {x: 0.38441652, y: -0.59395075, z: 0.38546214, w: 0.5923389}
+  m_LocalPosition: {x: -0.37086105, y: -1.631772, z: 1.4522554}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13094,12 +13094,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uD050\uBE0C \uBC30\uCE58:\n\uB9C8\uC6B0\uC2A4 \uD074\uB9AD&\uB4DC\uB798\uADF8\n\n\uD050\uBE0C
-    \uD68C\uC804:\n\uAD74\uB9AC\uAE30 WASD\n\uB3CC\uB9AC\uAE30 QE\n\n\uCE74\uBA54\uB77C
-    \uD68C\uC804: \uB9C8\uC6B0\uC2A4 \uC2A4\uD06C\uB864\n\uB2E4\uC2DC \uC2DC\uC791:
-    Ctrl + R\n\uB418\uB3CC\uB9AC\uAE30: Z\n\uADDC\uCE59\uC11C \uD074\uB9AD: \uD655\uB300\n\n\uBE5B
-    \uC3D8\uAE30:\nSpaceBar\n\n\uD050\uBE0C\uB97C \uC313\uC544\uBCF4\uC138\uC694.\n\n\uC2B9\uB9AC\uC870\uAC74:\n\uAC74\uB108\uD3B8
-    \uBAA8\uB4E0 \uCD1B\uBD88\uC5D0\n\uBD88\uC744 \uBC1D\uD788\uC2DC\uC624"
+  m_text: "\uD074\uB9AD\uD574\uC11C \uD655\uB300\n\n\uD050\uBE0C \uBC30\uCE58:\n\uB9C8\uC6B0\uC2A4
+    \uD074\uB9AD&\uB4DC\uB798\uADF8\n\n\uD050\uBE0C \uD68C\uC804:\n\uAD74\uB9AC\uAE30
+    WASD\n\uB3CC\uB9AC\uAE30 QE\n\n\uBE5B \uC3D8\uAE30:\nSpaceBar\n\n\uCE74\uBA54\uB77C
+    \uD68C\uC804: \uB9C8\uC6B0\uC2A4 \uC2A4\uD06C\uB864\n\uB418\uB3CC\uB9AC\uAE30:
+    Z\n\uB2E4\uC2DC \uC2DC\uC791: Ctrl + R\n\n\uC2B9\uB9AC \uC870\uAC74:\n\uAC74\uB108\uD3B8
+    \uBAA8\uB4E0 \uB4F1\uC5D0\n\uBD88\uC744 \uBC1D\uD788\uC2DC\uC624"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b34dcf9775566694e845295f3193967d, type: 2}
   m_sharedMaterial: {fileID: 67909258525016958, guid: b34dcf9775566694e845295f3193967d, type: 2}
