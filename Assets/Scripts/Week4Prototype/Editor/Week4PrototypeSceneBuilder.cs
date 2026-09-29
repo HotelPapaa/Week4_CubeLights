@@ -25,6 +25,13 @@ namespace GameLab.Week4.Editor
         [InitializeOnLoadMethod]
         private static void QueueFirstBuild()
         {
+            // Domain reloads can also happen while entering Play Mode. Scene-authoring
+            // APIs such as EditorSceneManager.NewScene cannot be used at that time.
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) == null)
             {
                 EditorApplication.delayCall += BuildScene;
@@ -34,6 +41,14 @@ namespace GameLab.Week4.Editor
         [MenuItem("Tools/GameLab/Build Week 4 Prototype Scene")]
         public static void BuildScene()
         {
+            // A delayed callback may have been queued immediately before Play Mode
+            // started, so guard the execution point as well as the scheduling point.
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("플레이 모드 중에는 4주차 프로토타입 씬을 생성할 수 없습니다.");
+                return;
+            }
+
             // 현재 작업 중인 씬을 보존하고, 새 씬을 추가 모드로 생성해 그 안에만 오브젝트를 만든다.
             Scene previousActiveScene = SceneManager.GetActiveScene();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
