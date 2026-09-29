@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: PuzzleCampaign
   m_EditorClassIdentifier: 
   stages:
+  - {fileID: 11400000, guid: 8aead2670f4087d4597898dd58ee7ae0, type: 2}
   - {fileID: 11400000, guid: b45afb5760076be4aaec2cd1e4076abe, type: 2}
   - {fileID: 11400000, guid: c3011111111141118111111111111111, type: 2}
   - {fileID: 11400000, guid: c3022222222242228222222222222222, type: 2}
   - {fileID: 11400000, guid: c3033333333343338333333333333333, type: 2}
   - {fileID: 11400000, guid: c3044444444444448444444444444444, type: 2}
-  - {fileID: 11400000, guid: 4b19c8afcb7b88f40a03f849825af76d, type: 2}
   - {fileID: 11400000, guid: 8f2e84aaf0f64714580d809595594d12, type: 2}
+  - {fileID: 11400000, guid: 5ef7fd37b1fb33242bf7b4dab5eefa90, type: 2}
+  - {fileID: 11400000, guid: 4b19c8afcb7b88f40a03f849825af76d, type: 2}
