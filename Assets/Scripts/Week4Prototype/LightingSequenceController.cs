@@ -27,6 +27,7 @@ namespace GameLab.Week4
         [SerializeField] public CinemachineCamera RightCamera;
         [SerializeField] public CinemachineCamera TopCamera;
         [SerializeField] public CinemachineCamera LeftCamera;
+        [SerializeField] public CinemachineCamera EasterEggCamera;
 
 
         private CinemachineCamera[] sceneCameras;
@@ -243,11 +244,14 @@ namespace GameLab.Week4
                         case "Left Camera":
                             if (LeftCamera == null) LeftCamera = camera;
                             break;
+                        case "EasterEggCamera":
+                            if (EasterEggCamera == null) EasterEggCamera = camera;
+                            break;
                     }
                 }
             }
 
-            sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera };
+            sceneCameras = new[] { defaultCamera, RightCamera, TopCamera, LeftCamera, StageCIneCamera, RuleCamera, EasterEggCamera };
         }
 
         public bool SelectCamera(CinemachineCamera selectedCamera)
