@@ -977,7 +977,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89954096}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.08149503, y: -0.70046526, z: -0.08104309, w: 0.70437145}
+  m_LocalRotation: {x: -0.08149502, y: -0.70046526, z: -0.08104307, w: 0.70437145}
   m_LocalPosition: {x: 34.31302, y: 7.700001, z: -958.2815}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3512,8 +3512,6 @@ PlayableDirector:
     value: {fileID: 1440186898}
   - key: {fileID: 8371846481698726266, guid: 86aa81d12cb85774fbfe18adcf68efa1, type: 2}
     value: {fileID: 1931485532}
-  - key: {fileID: -2808142317018868379, guid: 86aa81d12cb85774fbfe18adcf68efa1, type: 2}
-    value: {fileID: 2038682373}
   - key: {fileID: 0}
     value: {fileID: 0}
   - key: {fileID: 0}
@@ -17840,6 +17838,58 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8643129785035430992, guid: ade98b91507e0a047aae822ba33df866, type: 3}
   m_PrefabInstance: {fileID: 1010550794}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1012151264
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1012151266}
+  - component: {fileID: 1012151265}
+  m_Layer: 0
+  m_Name: SoundTL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!320 &1012151265
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012151264}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: 8ab731869049a9348b0124bcbb807b0d, type: 2}
+  m_InitialState: 1
+  m_WrapMode: 2
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 4051681284012048693, guid: 8ab731869049a9348b0124bcbb807b0d, type: 2}
+    value: {fileID: 2038682373}
+  m_ExposedReferences:
+    m_References:
+    - 163f215ad2887c749acb6eabf5849d95: {fileID: 448396560}
+--- !u!4 &1012151266
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012151264}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 33.985382, y: 0.96959543, z: -0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1013990849
 GameObject:
   m_ObjectHideFlags: 0
@@ -25044,7 +25094,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945678161}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.11493179, y: 0.002762178, z: 0.00031957848, w: 0.9933695}
+  m_LocalRotation: {x: -0.114931785, y: 0.002762178, z: 0.00031957848, w: 0.9933695}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -25788,6 +25838,7 @@ GameObject:
   - component: {fileID: 2038682374}
   - component: {fileID: 2038682373}
   - component: {fileID: 2038682375}
+  - component: {fileID: 2038682376}
   m_Layer: 0
   m_Name: BGM_Wind
   m_TagString: Untagged
@@ -25932,6 +25983,28 @@ AudioLowPassFilter:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!95 &2038682376
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2038682372}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &2063963534
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27498,6 +27571,7 @@ SceneRoots:
   - {fileID: 1272875737}
   - {fileID: 223349937}
   - {fileID: 70328740}
+  - {fileID: 1012151266}
   - {fileID: 1013990850}
   - {fileID: 1299058071}
   - {fileID: 2038682374}
