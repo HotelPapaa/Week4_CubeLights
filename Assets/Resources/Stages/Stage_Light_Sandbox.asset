@@ -89,7 +89,7 @@ MonoBehaviour:
     usesReserveSlot: 0
     reserveSide: 0
     reserveSlot: 0
-  - prefab: {fileID: 1415909175938910732, guid: 7455ff96e6bba6245a5c1b709276abcd, type: 3}
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
     localPosition: {x: 0, y: 0, z: 1.2}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0

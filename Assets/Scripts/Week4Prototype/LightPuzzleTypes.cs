@@ -47,7 +47,7 @@ namespace GameLab.Week4
         }
     }
 
-    /// <summary>시각화에 전달할 빛의 한 칸짜리 이동 구간이다.</summary>
+    /// <summary>시각화에 전달할 빛의 이동 구간이다. 격자 밖으로 빠져나가는 마지막 구간은 여러 칸일 수 있다.</summary>
     public readonly struct LightBeamSegment
     {
         public readonly Vector3Int From;

@@ -15,6 +15,10 @@ namespace GameLab.Week4
         [SerializeField] private AudioMixerGroup output;
         [Range(0f, 1f)] [SerializeField] private float volume = 1f;
         [SerializeField] private Vector2 pitchRange = Vector2.one;
+        [Tooltip("연출 이벤트가 발생한 뒤 실제 재생을 시작할 때까지의 보정 시간입니다.")]
+        [Min(0f)] [SerializeField] private float syncDelay;
+        [Tooltip("클립 앞부분의 무음이나 느린 어택을 건너뛰기 위한 시작 위치입니다.")]
+        [Min(0f)] [SerializeField] private float clipStartOffset;
         [Range(0f, 1f)] [SerializeField] private float spatialBlend;
         [Min(0.01f)] [SerializeField] private float minDistance = 1f;
         [Min(0.01f)] [SerializeField] private float maxDistance = 18f;
@@ -31,6 +35,8 @@ namespace GameLab.Week4
         public float Volume => volume;
         public float MinPitch => Mathf.Min(pitchRange.x, pitchRange.y);
         public float MaxPitch => Mathf.Max(pitchRange.x, pitchRange.y);
+        public float SyncDelay => syncDelay;
+        public float ClipStartOffset => clipStartOffset;
         public float SpatialBlend => spatialBlend;
         public float MinDistance => minDistance;
         public float MaxDistance => Mathf.Max(minDistance, maxDistance);

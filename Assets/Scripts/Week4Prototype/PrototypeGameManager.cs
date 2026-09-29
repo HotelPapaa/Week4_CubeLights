@@ -15,6 +15,7 @@ namespace GameLab.Week4
         [SerializeField] private LightPuzzleVisualizer lightVisualizer;
 
         private DraggableCube selectedCube;
+        private DraggableCube hoveredCube;
         private PuzzleStageDefinition currentStage;
         private LightSimulationResult lastLightResult;
         private readonly HashSet<string> latchedLampKeys = new();
@@ -74,6 +75,17 @@ namespace GameLab.Week4
         public void SetLightVisualizationVisible(bool visible)
         {
             lightVisualizer?.SetBeamsVisible(visible);
+        }
+
+        /// <summary>
+        /// 조명 화면을 닫을 때 이번 점등에서 켜진 전등과 광선만 초기화한다.
+        /// 이미 달성한 스테이지 클리어 기록은 유지한다.
+        /// </summary>
+        public void ResetLightAttempt()
+        {
+            latchedLampKeys.Clear();
+            lastLightResult = null;
+            lightVisualizer?.ResetLightAttempt();
         }
 
         /// <summary>점등 결과 화면에 들어가기 직전 Stage Camera를 5x3 전등판 정면으로 맞춘다.</summary>
@@ -139,6 +151,7 @@ namespace GameLab.Week4
             }
 
             HandleMouse();
+            RefreshHoveredCube();
             HandleRotation();
         }
 
@@ -149,12 +162,10 @@ namespace GameLab.Week4
 
             if (Mouse.current.leftButton.wasPressedThisFrame)
             {
-                Ray ray = playerCamera.ScreenPointToRay(pointer);
-                if (Physics.Raycast(ray, out RaycastHit hit) &&
-                    hit.collider.TryGetComponent(out DraggableCube cube) &&
-                    !cube.InteractionLocked)
+                if (TryGetCubeUnderPointer(pointer, out DraggableCube cube))
                 {
                     selectedCube = cube;
+                    SoundManager.Play(SoundEventId.CubePickup, selectedCube.transform.position);
                     selectedCube.BeginDrag();
                     isDragging = true;
                 }
@@ -183,7 +194,10 @@ namespace GameLab.Week4
             {
                 if (selectedCube != null)
                 {
-                    selectedCube.EndDrag();
+                    bool placedOnBoard = selectedCube.EndDrag();
+                    SoundManager.Play(
+                        placedOnBoard ? SoundEventId.CubePlace : SoundEventId.CubeReturn,
+                        selectedCube.transform.position);
                 }
 
                 isDragging = false;
@@ -191,14 +205,13 @@ namespace GameLab.Week4
         }
 
         /// <summary>
-        /// 마우스로 큐브를 잡고 있는 동안 W/S는 화면 기준 앞뒤, A/D는 좌우로 90도 회전한다.
+        /// 커서를 올린 큐브에 W/S는 화면 기준 앞뒤, A/D는 좌우로 90도 회전한다.
         /// Q/E는 보드 수직축을 중심으로 횡 방향 90도 회전한다.
         /// 카메라가 월드축과 비스듬해도 플레이어가 보는 방향과 입력 방향이 일치한다.
         /// </summary>
         private void HandleRotation()
         {
-            if (!isDragging || selectedCube == null ||
-                Mouse.current == null || !Mouse.current.leftButton.isPressed)
+            if (hoveredCube == null)
             {
                 return;
             }
@@ -212,12 +225,56 @@ namespace GameLab.Week4
             if (cameraRight.sqrMagnitude < 0.001f) cameraRight = Vector3.right;
             if (boardUp.sqrMagnitude < 0.001f) boardUp = Vector3.up;
 
-            if (Keyboard.current.wKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, 90f);
-            if (Keyboard.current.sKey.wasPressedThisFrame) selectedCube.RotateBy(cameraRight, -90f);
-            if (Keyboard.current.aKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, 90f);
-            if (Keyboard.current.dKey.wasPressedThisFrame) selectedCube.RotateBy(cameraForward, -90f);
-            if (Keyboard.current.qKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, -90f);
-            if (Keyboard.current.eKey.wasPressedThisFrame) selectedCube.RotateBy(boardUp, 90f);
+            if (Keyboard.current.wKey.wasPressedThisFrame) RotateHoveredCube(cameraRight, 90f);
+            if (Keyboard.current.sKey.wasPressedThisFrame) RotateHoveredCube(cameraRight, -90f);
+            if (Keyboard.current.aKey.wasPressedThisFrame) RotateHoveredCube(cameraForward, 90f);
+            if (Keyboard.current.dKey.wasPressedThisFrame) RotateHoveredCube(cameraForward, -90f);
+            if (Keyboard.current.qKey.wasPressedThisFrame) RotateHoveredCube(boardUp, -90f);
+            if (Keyboard.current.eKey.wasPressedThisFrame) RotateHoveredCube(boardUp, 90f);
+        }
+
+        /// <summary>유효한 회전 입력을 받은 프레임에 효과음과 회전 동작을 함께 시작한다.</summary>
+        private void RotateHoveredCube(Vector3 axis, float degrees)
+        {
+            if (hoveredCube == null) return;
+
+            SoundManager.Play(SoundEventId.CubeRotate, hoveredCube.transform.position);
+            hoveredCube.RotateBy(axis, degrees);
+        }
+
+        /// <summary>
+        /// 드래그 중에는 잡은 큐브를 유지하고, 평상시에는 커서 아래 Collider의 부모 큐브를 찾는다.
+        /// </summary>
+        private void RefreshHoveredCube()
+        {
+            if (isDragging && selectedCube != null)
+            {
+                hoveredCube = selectedCube;
+                return;
+            }
+
+            hoveredCube = TryGetCubeUnderPointer(
+                Mouse.current.position.ReadValue(),
+                out DraggableCube cube)
+                ? cube
+                : null;
+        }
+
+        /// <summary>프리팹의 자식 Collider를 눌러도 부모의 DraggableCube를 반환한다.</summary>
+        private bool TryGetCubeUnderPointer(Vector2 pointer, out DraggableCube cube)
+        {
+            Ray ray = playerCamera.ScreenPointToRay(pointer);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                cube = hit.collider.GetComponentInParent<DraggableCube>();
+                if (cube != null && !cube.InteractionLocked)
+                {
+                    return true;
+                }
+            }
+
+            cube = null;
+            return false;
         }
 
         /// <summary>배치를 바꾸면 광선 경로만 무효화하고 이미 켜진 전등 상태는 유지한다.</summary>
@@ -284,7 +341,7 @@ namespace GameLab.Week4
 
             string message = hasWon
                 ? "완성! 모든 전등에 올바른 빛이 정면으로 들어왔습니다."
-                : "큐브: 마우스로 드래그 / W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\nSpace: 점등하고 전등 결과 확인";
+                : "큐브: 마우스로 드래그 / 커서를 올리고 W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\nSpace: 점등하고 전등 결과 확인";
             Rect panelRect = new Rect(20, 20, 500, 78);
 
             // 흰색 기본 텍스처에 색만 입혀 반투명 패널 배경을 그린다.
