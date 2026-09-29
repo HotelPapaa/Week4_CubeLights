@@ -951,7 +951,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60.000004
+  field of view: 60
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -977,8 +977,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89954096}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.2465204, y: 0.47818357, z: -0.14271988, w: -0.8307823}
-  m_LocalPosition: {x: -515.57, y: 265.32025, z: -1089.49}
+  m_LocalRotation: {x: -0.08149468, y: -0.7004652, z: -0.08104272, w: 0.7043715}
+  m_LocalPosition: {x: 34.316437, y: 10.620258, z: -958.2815}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1007,7 +1007,7 @@ MonoBehaviour:
     Enabled: 0
     DefaultMode: 2
   DefaultBlend:
-    Style: 1
+    Style: 0
     Time: 2
     CustomCurve:
       serializedVersion: 2
@@ -20211,7 +20211,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playableDirector: {fileID: 448396561}
-  nextSceneName: Ruins_KSW
+  nextSceneName: Ruins_LNY2
 --- !u!1001 &1316011754
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25303,8 +25303,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945678161}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0021292393, y: -0.9959127, z: -0.08734453, w: -0.022899548}
-  m_LocalPosition: {x: -2.3283064e-10, y: -0.000012392508, z: -0.002685519}
+  m_LocalRotation: {x: -0.11493129, y: 0.002762178, z: 0.0003195732, w: 0.9933695}
+  m_LocalPosition: {x: -4.656613e-10, y: -0.000016227441, z: -0.003417931}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
