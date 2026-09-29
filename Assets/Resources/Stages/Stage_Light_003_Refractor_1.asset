@@ -25,30 +25,34 @@ MonoBehaviour:
     usesReserveSlot: 1
     reserveSide: 0
     reserveSlot: 2
+    reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: 0.33999997, y: 0.1, z: -0.2}
+    localPosition: {x: -0.8, y: 0.09, z: 1.61}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
     usesReserveSlot: 0
     reserveSide: 2
     reserveSlot: 1
+    reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
-    localPosition: {x: 0.33999997, y: 0.1, z: -0.3}
+    localPosition: {x: -0.5, y: 0.09, z: 1.61}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
     usesReserveSlot: 0
     reserveSide: 2
     reserveSlot: 1
+    reserveLevel: 0
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: 0.33999997, y: 0.1, z: -0.6}
+    localPosition: {x: -0.2, y: 0.09, z: 1.61}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
     usesReserveSlot: 0
     reserveSide: 2
     reserveSlot: 1
+    reserveLevel: 0
   lampTargets:
   - gridPosition: {x: -1, y: 1, z: 3}
     frontDirection: 0
