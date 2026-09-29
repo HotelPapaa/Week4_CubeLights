@@ -349,7 +349,7 @@ MonoBehaviour:
   - eventId: 21
     bus: 2
     clips:
-    - {fileID: 8300000, guid: c44246981eaf9ca4bb50c5d1c436d14a, type: 3}
+    - {fileID: 0}
     output: {fileID: 0}
     volume: 0.55
     pitchRange: {x: 1, y: 1}
