@@ -3069,8 +3069,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.25761107, y: 0.6546925, z: -0.25413698, w: -0.66364807}
-  m_LocalPosition: {x: 36.122257, y: 1.0906237, z: -0.046715945}
+  m_LocalRotation: {x: -0.2987523, y: 0.64157456, z: -0.2995674, w: -0.6398349}
+  m_LocalPosition: {x: 35.905205, y: 1.1920905, z: -0.055762816}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3385,8 +3385,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 386738698}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.1137573, y: -0.70648444, z: 0.118397556, w: 0.6884192}
-  m_LocalPosition: {x: 0.141, y: -2.922, z: 1.407}
+  m_LocalRotation: {x: 0.2529673, y: -0.6602435, z: 0.2549353, w: 0.65961665}
+  m_LocalPosition: {x: -0.36720657, y: -2.4706616, z: 1.3918546}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7981,8 +7981,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1052796886}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0023080441, y: 0.9553222, z: -0.295402, w: -0.009585271}
-  m_LocalPosition: {x: -1.0149727, y: -2.8015347, z: 2.3740215}
+  m_LocalRotation: {x: 0.0019447209, y: 0.93163824, z: -0.36336756, w: 0.003261694}
+  m_LocalPosition: {x: -1.0113792, y: -2.5415063, z: 2.5007558}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13019,8 +13019,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD050\uBE0C \uBC30\uCE58:\n\uB9C8\uC6B0\uC2A4 \uD074\uB9AD&\uB4DC\uB798\uADF8\n\n\uD050\uBE0C
     \uD68C\uC804:\n\uAD74\uB9AC\uAE30 WASD\n\uB3CC\uB9AC\uAE30 QE\n\n\uCE74\uBA54\uB77C
-    \uD68C\uC804: R\n\uADDC\uCE59\uC11C \uD074\uB9AD: \uD655\uB300\n\n\uBE5B \uC3D8\uAE30:\nSpaceBar\n\n\uD050\uBE0C\uB97C
-    \uC313\uC544\uBCF4\uC138\uC694.\n\n\uC2B9\uB9AC\uC870\uAC74:\n\uAC74\uB108\uD3B8
+    \uD68C\uC804: \uB9C8\uC6B0\uC2A4 \uC2A4\uD06C\uB864\n\uB2E4\uC2DC \uC2DC\uC791:
+    R\n\uB418\uB3CC\uB9AC\uAE30: Z\n\uADDC\uCE59\uC11C \uD074\uB9AD: \uD655\uB300\n\n\uBE5B
+    \uC3D8\uAE30:\nSpaceBar\n\n\uD050\uBE0C\uB97C \uC313\uC544\uBCF4\uC138\uC694.\n\n\uC2B9\uB9AC\uC870\uAC74:\n\uAC74\uB108\uD3B8
     \uBAA8\uB4E0 \uCD1B\uBD88\uC5D0\n\uBD88\uC744 \uBC1D\uD788\uC2DC\uC624"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b34dcf9775566694e845295f3193967d, type: 2}
@@ -13509,8 +13510,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2021318525}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.35576558, y: 0.0043401197, z: -0.0009817193, w: 0.9345647}
-  m_LocalPosition: {x: -1.0710068, y: -2.8230948, z: 0.5546345}
+  m_LocalRotation: {x: 0.37095308, y: -0.0007226696, z: 0.00096339924, w: 0.92865086}
+  m_LocalPosition: {x: -1.0727539, y: -2.567051, z: 0.40753746}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
