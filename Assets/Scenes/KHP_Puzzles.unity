@@ -4481,8 +4481,7 @@ MonoBehaviour:
   m_text: "\uAE08\uAD34\uB97C \uAC00\uC838\uAC00\uACE0 \uC2F6\uB098?\n\uADF8\uB807\uAC8C
     \uAC04\uB2E8\uD558\uAC8C\uB294 \uC548 \uB418\uC9C0.\n\n\uB2E4\uB978 \uAC74 \uBAB0\uB77C\uB3C4
     \uBA4D\uCCAD\uD55C \uB188\uD55C\uD14C\n\uB0B4 \uBCF4\uBB3C\uC744 \uB118\uAE38
-    \uC218\uC57C \uC5C6\uAC70\uB4E0..\n\n\uBCF4\uBB3C\uC744 \uC6D0\uD55C\uB2E4\uBA74
-    \uC99D\uBA85\uD574\uBCF4\uB77C\uACE0.\n"
+    \uC218\uC57C \uC5C6\uAC70\uB4E0..\n\n\uAE08\uAD34\uB97C \uD480\uC5B4 \uC99D\uBA85\uD574\uBCF4\uB77C\uACE0.\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b34dcf9775566694e845295f3193967d, type: 2}
   m_sharedMaterial: {fileID: 67909258525016958, guid: b34dcf9775566694e845295f3193967d, type: 2}
@@ -10705,6 +10704,7 @@ MonoBehaviour:
   targetProjection: 01000000020000000200000001000000
   showInstructionOverlay: 0
   lightVisualizer: {fileID: 0}
+  undoCapacity: 30
 --- !u!4 &1518278687
 Transform:
   m_ObjectHideFlags: 0
@@ -10745,6 +10745,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  scrollThreshold: 0.01
+  scrollCooldown: 0.08
   playerCamera: {fileID: 89954099}
   stageCamera: {fileID: 330585545}
   gameManager: {fileID: 1518278686}
