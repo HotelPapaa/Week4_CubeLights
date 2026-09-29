@@ -21,6 +21,9 @@ namespace GameLab.Week4
         [SerializeField] private LightingSequenceController lightingController;
         [SerializeField] private GameObject legacyCubeRoot;
 
+        [Header("Reserve 표시")]
+        [SerializeField] private GameObject reserveSlotFramePrefab;
+
         [Header("프로토타입 탐색")]
         [SerializeField] private bool showStageUI = true;
         [SerializeField] private bool allowUnlockedNavigation = true;
@@ -153,6 +156,7 @@ namespace GameLab.Week4
                 if (spawn.usesReserveSlot)
                 {
                     board.RegisterExternalCube(cube);
+                    CreateReserveSlotFrame(cubeObject, initialPosition);
                 }
                 if (spawn.startsOnBoard)
                 {
@@ -227,6 +231,52 @@ namespace GameLab.Week4
                     ? new Vector3Int(0, 0, 1)
                     : new Vector3Int(0, 0, -1);
                 screenNear = localToCamera.x >= 0f ? Vector3Int.right : Vector3Int.left;
+            }
+        }
+
+        /// <summary>
+        /// 고정 Reserve 큐브와 같은 위치에 시각 전용 프레임을 생성한다.
+        /// 프레임은 큐브와 별개로 보드 방향에 정렬하고, 입력과 퍼즐 판정을 방해하는 컴포넌트는 제거한다.
+        /// </summary>
+        private void CreateReserveSlotFrame(GameObject cubeObject, Vector3 worldPosition)
+        {
+            if (reserveSlotFramePrefab == null || runtimeCubeRoot == null) return;
+
+            Quaternion frameRotation = board != null ? board.transform.rotation : Quaternion.identity;
+            GameObject frame = Instantiate(
+                reserveSlotFramePrefab,
+                worldPosition,
+                frameRotation,
+                runtimeCubeRoot);
+            frame.name = $"{cubeObject.name}_ReserveSlotFrame";
+
+            // 제작 기준으로 사용된 발광 방향 표식은 실제 Reserve 큐브가 이미 가지고 있으므로 숨긴다.
+            Transform opticMarkers = frame.transform.Find("OpticDirectionMarkers");
+            if (opticMarkers != null) opticMarkers.gameObject.SetActive(false);
+
+            foreach (Collider frameCollider in frame.GetComponentsInChildren<Collider>(true))
+            {
+                frameCollider.enabled = false;
+            }
+
+            foreach (Rigidbody frameBody in frame.GetComponentsInChildren<Rigidbody>(true))
+            {
+                frameBody.detectCollisions = false;
+                frameBody.isKinematic = true;
+                Destroy(frameBody);
+            }
+
+            foreach (PuzzleCubeProperties properties in
+                     frame.GetComponentsInChildren<PuzzleCubeProperties>(true))
+            {
+                properties.enabled = false;
+                Destroy(properties);
+            }
+
+            foreach (DraggableCube draggable in frame.GetComponentsInChildren<DraggableCube>(true))
+            {
+                draggable.enabled = false;
+                Destroy(draggable);
             }
         }
 

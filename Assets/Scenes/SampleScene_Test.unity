@@ -10028,6 +10028,7 @@ MonoBehaviour:
   gameManager: {fileID: 1518278686}
   lightingController: {fileID: 1518278688}
   legacyCubeRoot: {fileID: 1272875736}
+  reserveSlotFramePrefab: {fileID: 7018710130116651528, guid: eb7c9e1fa445573488ff681a0a63c6a8, type: 3}
   showStageUI: 1
   allowUnlockedNavigation: 1
 --- !u!114 &1518278690
