@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace GameLab.Week4
 {
@@ -70,9 +71,21 @@ namespace GameLab.Week4
 
         private void Awake()
         {
+            // 스테이지 탐색 패널은 일반 플레이에서는 숨기고 F12 개발자 토글로만 연다.
+            showStageUI = false;
+
             if (campaign == null)
             {
                 campaign = Resources.Load<PuzzleCampaign>(CampaignResourcePath);
+            }
+        }
+
+        private void Update()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.f12Key.wasPressedThisFrame)
+            {
+                showStageUI = !showStageUI;
             }
         }
 
