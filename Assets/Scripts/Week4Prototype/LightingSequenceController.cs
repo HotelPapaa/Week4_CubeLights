@@ -129,7 +129,10 @@ namespace GameLab.Week4
             ownsRestartAction = restartAction == null;
             if (ownsRestartAction)
             {
-                restartAction = new InputAction("Restart", InputActionType.Button, "<Keyboard>/r");
+                restartAction = new InputAction("Restart", InputActionType.Button);
+                restartAction.AddCompositeBinding("OneModifier")
+                    .With("Modifier", "<Keyboard>/ctrl")
+                    .With("Binding", "<Keyboard>/r");
             }
 
             undoAction = inputActions != null ? inputActions.FindAction(UndoActionPath, false) : null;

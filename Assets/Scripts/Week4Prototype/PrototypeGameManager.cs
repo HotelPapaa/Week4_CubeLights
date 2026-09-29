@@ -539,7 +539,7 @@ namespace GameLab.Week4
 
             string message = hasWon
                 ? "완성! 모든 전등에 올바른 빛이 정면으로 들어왔습니다."
-                : "큐브: 마우스로 드래그 / 커서를 올리고 W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\n휠: 카메라 회전 / R: 다시 시작 / Z: 무르기 / Space: 점등";
+                : "큐브: 마우스로 드래그 / 커서를 올리고 W·S: 앞뒤 / A·D: 좌우 / Q·E: 횡 회전\n휠: 카메라 회전 / Ctrl+R: 다시 시작 / Z: 무르기 / Space: 점등";
             Rect panelRect = new Rect(20, 20, 500, 78);
 
             // 흰색 기본 텍스처에 색만 입혀 반투명 패널 배경을 그린다.
