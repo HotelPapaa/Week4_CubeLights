@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
-  m_Name: Stage_Light_Color_2
+  m_Name: Stage_Light_009_Color_2
   m_EditorClassIdentifier: 
   stageId: Sandbox
   displayName: TestPlace

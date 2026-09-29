@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3f3a6f417e14afd9ed8944336062f0f, type: 3}
-  m_Name: Stage_Light_002_Refractor
+  m_Name: Stage_Light_003_Refractor_1
   m_EditorClassIdentifier: 
-  stageId: light-002
-  displayName: 2
+  stageId: light-003
+  displayName: "\uAD74\uC808 \uC751\uC6A9"
   hint: 
   gridSize: {x: 3, y: 5}
   cubeSpawns:
@@ -21,12 +21,20 @@ MonoBehaviour:
     localPosition: {x: 0, y: 0, z: 0}
     localEulerAngles: {x: 0, y: 90, z: 0}
     startsOnBoard: 0
-    boardCell: {x: 0, y: 0}
+    boardCell: {x: 2, y: 2}
     usesReserveSlot: 1
     reserveSide: 0
     reserveSlot: 2
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: 0.08, y: 0.1, z: -0.52}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.2}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    startsOnBoard: 0
+    boardCell: {x: 0, y: 0}
+    usesReserveSlot: 0
+    reserveSide: 2
+    reserveSlot: 1
+  - prefab: {fileID: 7018710130116651528, guid: a1f0e2d3c4b54788a9b0c1d2e3f40516, type: 3}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.3}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
@@ -34,7 +42,7 @@ MonoBehaviour:
     reserveSide: 2
     reserveSlot: 1
   - prefab: {fileID: 7018710130116651528, guid: b2e1f3a4d5c64899b0c1d2e3f4051627, type: 3}
-    localPosition: {x: 0.33999997, y: 0.1, z: -0.52}
+    localPosition: {x: 0.33999997, y: 0.1, z: -0.6}
     localEulerAngles: {x: 0, y: 0, z: 0}
     startsOnBoard: 0
     boardCell: {x: 0, y: 0}
@@ -42,7 +50,10 @@ MonoBehaviour:
     reserveSide: 2
     reserveSlot: 1
   lampTargets:
-  - gridPosition: {x: -1, y: 1, z: 1}
+  - gridPosition: {x: -1, y: 1, z: 3}
+    frontDirection: 0
+    requiredColor: 0
+  - gridPosition: {x: -1, y: 2, z: 3}
     frontDirection: 0
     requiredColor: 0
   projectionUsesDepthAxis: 1
