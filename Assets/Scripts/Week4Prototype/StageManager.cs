@@ -44,6 +44,8 @@ namespace GameLab.Week4
         public bool StageSolved => stageSolved;
         public event Action<int> StageLoaded;
         public event Action<int> StageCleared;
+        public event Action<int> DeveloperStageAdvanceRequested;
+        public event Action<int> DeveloperFinalStageRewardRequested;
 
         public void Initialize(
             PuzzleCampaign targetCampaign,
@@ -445,11 +447,20 @@ namespace GameLab.Week4
                 SoundManager.Play(SoundEventId.UiClick);
                 RestartStage();
             }
-            GUI.enabled = currentStageIndex < campaign.StageCount - 1 && (allowUnlockedNavigation || stageSolved);
+            GUI.enabled = allowUnlockedNavigation || stageSolved;
             if (GUILayout.Button("다음"))
             {
                 SoundManager.Play(SoundEventId.UiClick);
-                LoadNextStage();
+                if (currentStageIndex < campaign.StageCount - 1)
+                {
+                    DeveloperStageAdvanceRequested?.Invoke(currentStageIndex);
+                    LoadNextStage();
+                }
+                else
+                {
+                    // 마지막 스테이지에서는 이동하거나 자동 배치하지 않고 보상 KeyCube만 떨어뜨린다.
+                    DeveloperFinalStageRewardRequested?.Invoke(currentStageIndex);
+                }
             }
             GUI.enabled = true;
             GUILayout.EndHorizontal();

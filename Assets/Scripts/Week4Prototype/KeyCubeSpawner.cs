@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace GameLab.Week4
 {
@@ -13,6 +14,7 @@ namespace GameLab.Week4
     {
         private const int PlacerColumns = 6;
         private const int PlacerRows = 2;
+        private const int RequiredKeyCubeCount = PlacerColumns * PlacerRows;
 
         [Header("연결")]
         [SerializeField] private StageManager stageManager;
@@ -29,9 +31,20 @@ namespace GameLab.Week4
         [Min(0.05f)] [SerializeField] private float readyBlinkInterval = 0.25f;
         [Min(0.01f)] [SerializeField] private float placementMargin = 0.08f;
 
+        [Header("12개 완성 연출")]
+        [Min(0f)] [SerializeField] private float completionEffectStartDelay;
+        [Min(0.1f)] [SerializeField] private float completionEffectDuration = 1.5f;
+        [Min(0f)] [SerializeField] private float completionLightIntensity = 8f;
+        [Min(0.1f)] [SerializeField] private float completionLightRange = 4f;
+        [ColorUsage(false, true)] [SerializeField] private Color completionEmissionColor = new(4f, 4f, 4f, 1f);
+        [SerializeField] private AnimationCurve completionEmissionGradation =
+            AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
         private readonly List<PlacerSlot> slots = new();
         private readonly HashSet<int> completedStages = new();
+        private readonly List<GameObject> completedKeyCubes = new();
         private Coroutine clearSequence;
+        private Coroutine completionEffectSequence;
         private GameObject activeKeyCube;
         private Rigidbody activeBody;
         private int activeStageIndex = -1;
@@ -41,6 +54,7 @@ namespace GameLab.Week4
         private Vector3 dragOffset;
         private float nextBlinkTime;
         private bool blinkReadyOn;
+        private bool completionEffectPlayed;
 
         private sealed class PlacerSlot
         {
@@ -48,6 +62,12 @@ namespace GameLab.Week4
             public Renderer Renderer;
             public Collider Collider;
             public Material OffMaterial;
+        }
+
+        private sealed class RuntimeEmission
+        {
+            public Material Material;
+            public Color StartColor;
         }
 
         private void Awake()
@@ -71,6 +91,11 @@ namespace GameLab.Week4
         {
             UnbindStageManager();
             CancelPendingClearSequence();
+            if (completionEffectSequence != null)
+            {
+                StopCoroutine(completionEffectSequence);
+                completionEffectSequence = null;
+            }
         }
 
         private void Update()
@@ -99,8 +124,12 @@ namespace GameLab.Week4
             if (stageManager == null) return;
             stageManager.StageCleared -= HandleStageCleared;
             stageManager.StageLoaded -= HandleStageLoaded;
+            stageManager.DeveloperStageAdvanceRequested -= HandleDeveloperStageAdvanceRequested;
+            stageManager.DeveloperFinalStageRewardRequested -= HandleDeveloperFinalStageRewardRequested;
             stageManager.StageCleared += HandleStageCleared;
             stageManager.StageLoaded += HandleStageLoaded;
+            stageManager.DeveloperStageAdvanceRequested += HandleDeveloperStageAdvanceRequested;
+            stageManager.DeveloperFinalStageRewardRequested += HandleDeveloperFinalStageRewardRequested;
         }
 
         private void UnbindStageManager()
@@ -108,6 +137,8 @@ namespace GameLab.Week4
             if (stageManager == null) return;
             stageManager.StageCleared -= HandleStageCleared;
             stageManager.StageLoaded -= HandleStageLoaded;
+            stageManager.DeveloperStageAdvanceRequested -= HandleDeveloperStageAdvanceRequested;
+            stageManager.DeveloperFinalStageRewardRequested -= HandleDeveloperFinalStageRewardRequested;
         }
 
         private void BuildOrderedSlots()
@@ -308,23 +339,35 @@ namespace GameLab.Week4
             if (activeSlotIndex < 0 || activeSlotIndex >= slots.Count || activeKeyCube == null) return false;
 
             PlacerSlot slot = slots[activeSlotIndex];
+            placementPosition = GetPlacementPosition(slot);
+
+            Vector3 topDirection = GetSlotTopDirection(slot);
             Bounds slotBounds = slot.Renderer.bounds;
-            Vector3 topDirection = slot.Transform.TransformDirection(Vector3.right).normalized;
-            if (Vector3.Dot(topDirection, Vector3.up) < 0f) topDirection = -topDirection;
-            if (Mathf.Abs(Vector3.Dot(topDirection, Vector3.up)) < 0.5f) topDirection = Vector3.up;
+            Vector3 offset = activeKeyCube.transform.position - placementPosition;
+            Vector3 planarOffset = offset - Vector3.Project(offset, topDirection);
+            float radius = Mathf.Max(slotBounds.extents.x, slotBounds.extents.z) + placementMargin;
+            return planarOffset.magnitude <= radius;
+        }
+
+        private Vector3 GetPlacementPosition(PlacerSlot slot)
+        {
+            Bounds slotBounds = slot.Renderer.bounds;
+            Vector3 topDirection = GetSlotTopDirection(slot);
 
             float slotExtent = ProjectedExtent(slotBounds, topDirection);
             Collider keyCollider = activeKeyCube.GetComponentInChildren<Collider>();
             float keyExtent = keyCollider != null
                 ? ProjectedExtent(keyCollider.bounds, topDirection)
                 : 0.1f;
-            placementPosition = slotBounds.center +
-                                topDirection * (slotExtent + keyExtent + 0.005f);
+            return slotBounds.center + topDirection * (slotExtent + keyExtent + 0.005f);
+        }
 
-            Vector3 offset = activeKeyCube.transform.position - placementPosition;
-            Vector3 planarOffset = offset - Vector3.Project(offset, topDirection);
-            float radius = Mathf.Max(slotBounds.extents.x, slotBounds.extents.z) + placementMargin;
-            return planarOffset.magnitude <= radius;
+        private static Vector3 GetSlotTopDirection(PlacerSlot slot)
+        {
+            Vector3 topDirection = slot.Transform.TransformDirection(Vector3.right).normalized;
+            if (Vector3.Dot(topDirection, Vector3.up) < 0f) topDirection = -topDirection;
+            if (Mathf.Abs(Vector3.Dot(topDirection, Vector3.up)) < 0.5f) topDirection = Vector3.up;
+            return topDirection;
         }
 
         private static float ProjectedExtent(Bounds bounds, Vector3 axis)
@@ -333,7 +376,7 @@ namespace GameLab.Week4
             return Vector3.Dot(bounds.extents, absoluteAxis);
         }
 
-        private void CompletePlacement(Vector3 placementPosition)
+        private void CompletePlacement(Vector3 placementPosition, bool loadNextStage = true)
         {
             int completedStageIndex = activeStageIndex;
             PlacerSlot slot = slots[activeSlotIndex];
@@ -358,13 +401,176 @@ namespace GameLab.Week4
                 ? occupiedMaterial
                 : slot.OffMaterial;
             completedStages.Add(completedStageIndex);
+            completedKeyCubes.Add(activeKeyCube);
             activeKeyCube = null;
             activeBody = null;
             activeStageIndex = -1;
             activeSlotIndex = -1;
             blinkReadyOn = false;
 
-            stageManager?.LoadNextStage();
+            if (!completionEffectPlayed && completedStages.Count >= RequiredKeyCubeCount)
+            {
+                completionEffectPlayed = true;
+                completionEffectSequence = StartCoroutine(PlayAllKeyCubesCompletedEffect());
+            }
+
+            if (loadNextStage) stageManager?.LoadNextStage();
+        }
+
+        private void HandleDeveloperStageAdvanceRequested(int stageIndex)
+        {
+            if (stageIndex < 0 || completedStages.Contains(stageIndex)) return;
+
+            BuildOrderedSlots();
+            int slotIndex = GetSlotIndexForStage(stageIndex);
+            if (slotIndex < 0 || slotIndex >= slots.Count)
+            {
+                Debug.LogWarning($"KeyCubeSpawner: {stageIndex + 1}스테이지에 대응하는 Placer가 없습니다.", this);
+                return;
+            }
+
+            CancelPendingClearSequence();
+            if (activeKeyCube != null && activeStageIndex != stageIndex)
+            {
+                Destroy(activeKeyCube);
+                activeKeyCube = null;
+                activeBody = null;
+            }
+
+            if (activeKeyCube == null)
+            {
+                ActivateSlot(stageIndex, slotIndex);
+                SpawnKeyCube();
+            }
+            else
+            {
+                activeStageIndex = stageIndex;
+                activeSlotIndex = slotIndex;
+            }
+
+            if (activeKeyCube == null) return;
+            CompletePlacement(GetPlacementPosition(slots[slotIndex]), loadNextStage: false);
+        }
+
+        private void HandleDeveloperFinalStageRewardRequested(int stageIndex)
+        {
+            // 실제 클리어 보상과 같은 지연·낙하 흐름을 사용하되 다음 스테이지로는 이동하지 않는다.
+            HandleStageCleared(stageIndex);
+        }
+
+        private IEnumerator PlayAllKeyCubesCompletedEffect()
+        {
+            float startDelay = Mathf.Max(0f, completionEffectStartDelay);
+            if (startDelay > 0f) yield return new WaitForSecondsRealtime(startDelay);
+
+            var completionLights = new List<Light>();
+            var runtimeEmissions = new List<RuntimeEmission>();
+            foreach (GameObject keyCube in completedKeyCubes)
+            {
+                if (keyCube == null) continue;
+
+                CollectRuntimeEmissions(keyCube, runtimeEmissions);
+
+                GameObject lightObject = new("CompletionWhiteLight");
+                lightObject.transform.SetParent(keyCube.transform, false);
+                Light pointLight = lightObject.AddComponent<Light>();
+                pointLight.type = LightType.Point;
+                pointLight.color = Color.white;
+                pointLight.intensity = 0f;
+                pointLight.range = 0.1f;
+                pointLight.shadows = LightShadows.None;
+                completionLights.Add(pointLight);
+            }
+
+            Image whiteoutImage = CreateWhiteoutImage();
+            float duration = Mathf.Max(0.1f, completionEffectDuration);
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
+                float eased = Mathf.SmoothStep(0f, 1f, progress);
+                float emissionProgress = completionEmissionGradation != null
+                    ? Mathf.Clamp01(completionEmissionGradation.Evaluate(progress))
+                    : eased;
+
+                foreach (RuntimeEmission emission in runtimeEmissions)
+                {
+                    if (emission.Material == null) continue;
+                    emission.Material.SetColor(
+                        "_EmissionColor",
+                        Color.Lerp(emission.StartColor, completionEmissionColor, emissionProgress));
+                }
+
+                foreach (Light pointLight in completionLights)
+                {
+                    if (pointLight == null) continue;
+                    pointLight.intensity = Mathf.Lerp(0f, completionLightIntensity, eased);
+                    pointLight.range = Mathf.Lerp(0.1f, completionLightRange, eased);
+                }
+
+                if (whiteoutImage != null)
+                {
+                    float whiteoutProgress = Mathf.InverseLerp(0.35f, 1f, progress);
+                    whiteoutImage.color = new Color(1f, 1f, 1f, Mathf.SmoothStep(0f, 1f, whiteoutProgress));
+                }
+
+                yield return null;
+            }
+
+            foreach (RuntimeEmission emission in runtimeEmissions)
+            {
+                if (emission.Material != null)
+                {
+                    emission.Material.SetColor("_EmissionColor", completionEmissionColor);
+                }
+            }
+
+            if (whiteoutImage != null) whiteoutImage.color = Color.white;
+            completionEffectSequence = null;
+        }
+
+        private static void CollectRuntimeEmissions(
+            GameObject keyCube,
+            ICollection<RuntimeEmission> runtimeEmissions)
+        {
+            foreach (Renderer renderer in keyCube.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] runtimeMaterials = renderer.materials;
+                foreach (Material material in runtimeMaterials)
+                {
+                    if (material == null || !material.HasProperty("_EmissionColor")) continue;
+                    Color startColor = material.GetColor("_EmissionColor");
+                    material.EnableKeyword("_EMISSION");
+                    runtimeEmissions.Add(new RuntimeEmission
+                    {
+                        Material = material,
+                        StartColor = startColor
+                    });
+                }
+            }
+        }
+
+        private static Image CreateWhiteoutImage()
+        {
+            GameObject canvasObject = new("KeyCubeCompletionWhiteout");
+            Canvas canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = short.MaxValue;
+            canvasObject.AddComponent<CanvasScaler>();
+
+            GameObject imageObject = new("Whiteout");
+            imageObject.transform.SetParent(canvasObject.transform, false);
+            Image image = imageObject.AddComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0f);
+            image.raycastTarget = false;
+
+            RectTransform rectTransform = image.rectTransform;
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            return image;
         }
 
         private void HandleStageLoaded(int stageIndex)

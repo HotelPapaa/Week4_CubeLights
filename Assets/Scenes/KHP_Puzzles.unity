@@ -14256,6 +14256,11 @@ MonoBehaviour:
   spawnDelayAfterClear: 1
   readyBlinkInterval: 0.25
   placementMargin: 0.08
+  completionEffectStartDelay: 1
+  completionEffectDuration: 4
+  completionLightIntensity: 8
+  completionLightRange: 4
+  completionEmissionColor: {r: 4, g: 4, b: 4, a: 1}
 --- !u!1001 &2147100532
 PrefabInstance:
   m_ObjectHideFlags: 0
