@@ -2444,6 +2444,7 @@ MonoBehaviour:
   surfaceY: 0
   cubeHeight: 0.2
   snapMargin: 0.07350004
+  escapedBeamExtensionCells: 6
 --- !u!4 &261625448
 Transform:
   m_ObjectHideFlags: 0
@@ -20252,6 +20253,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1299058071}
+  - component: {fileID: 1299058072}
   m_Layer: 0
   m_Name: SceneManager
   m_TagString: Untagged
@@ -20274,6 +20276,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1299058072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299058070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af9896dfa7a61df41a6a8f24e3d3ae84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playableDirector: {fileID: 448396561}
+  nextSceneName: Ruins_KSW
 --- !u!1001 &1316011754
 PrefabInstance:
   m_ObjectHideFlags: 0

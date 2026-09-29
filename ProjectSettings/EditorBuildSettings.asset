@@ -4,6 +4,15 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/CAM_SGY.unity
+    guid: 5c38ae5b15901e541a3e39da41ce9a06
+  - enabled: 1
+    path: Assets/Scenes/Ruins_KSW.unity
+    guid: 3be6b620b9bcf064280d6a970053961f
+  - enabled: 1
+    path: Assets/Scenes/SampleScene_Test.unity
+    guid: 1e5c8ab641c89b54fba8ca8d4f4afed4
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
