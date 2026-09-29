@@ -38,7 +38,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Fade: 1
+    - _Fade: 0
     - _Metallic: 0.7
     - _NoiseScale: 1.5
     - _QueueControl: 0

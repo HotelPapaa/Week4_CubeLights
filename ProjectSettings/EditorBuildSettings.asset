@@ -12,10 +12,16 @@ EditorBuildSettings:
     path: Assets/Scenes/Ruins_KSW.unity
     guid: 3be6b620b9bcf064280d6a970053961f
   - enabled: 1
-    path: Assets/Scenes/SampleScene_Test.unity
+    path: Assets/Scenes/Deprecated/SampleScene_Test.unity
     guid: 1e5c8ab641c89b54fba8ca8d4f4afed4
   - enabled: 1
     path: Assets/Scenes/KHP_Puzzles.unity
     guid: 2b566c8b02453a744baf2d894cb5543b
+  - enabled: 1
+    path: Assets/Scenes/Ruins_LNY2.unity
+    guid: 90ec9d233eb7b9045adcd2bae288a77c
+  - enabled: 1
+    path: Assets/Scenes/Ruins_KSW_End.unity
+    guid: fc7020525092efc48b68c9e54f03e239
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
