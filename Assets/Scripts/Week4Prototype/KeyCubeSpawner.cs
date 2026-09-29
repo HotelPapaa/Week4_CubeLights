@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace GameLab.Week4
@@ -40,6 +41,13 @@ namespace GameLab.Week4
         [SerializeField] private AnimationCurve completionEmissionGradation =
             AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+        [Header("완성 후 씬 전환")]
+#if UNITY_EDITOR
+        [Tooltip("Completion Effect가 끝난 뒤 불러올 씬")]
+        [SerializeField] private UnityEditor.SceneAsset completionScene;
+#endif
+        [SerializeField, HideInInspector] private string completionScenePath;
+
         private readonly List<PlacerSlot> slots = new();
         private readonly HashSet<int> completedStages = new();
         private readonly List<GameObject> completedKeyCubes = new();
@@ -75,6 +83,15 @@ namespace GameLab.Week4
             ResolveReferences();
             BuildOrderedSlots();
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            completionScenePath = completionScene != null
+                ? UnityEditor.AssetDatabase.GetAssetPath(completionScene)
+                : string.Empty;
+        }
+#endif
 
         private void OnEnable()
         {
@@ -533,6 +550,29 @@ namespace GameLab.Week4
 
             if (whiteoutImage != null) whiteoutImage.color = Color.white;
             completionEffectSequence = null;
+            LoadCompletionScene();
+        }
+
+        private void LoadCompletionScene()
+        {
+            if (string.IsNullOrWhiteSpace(completionScenePath))
+            {
+                Debug.LogWarning(
+                    "KeyCubeSpawner: 완성 연출 후 이동할 Completion Scene이 지정되지 않았습니다.",
+                    this);
+                return;
+            }
+
+            if (!Application.CanStreamedLevelBeLoaded(completionScenePath))
+            {
+                Debug.LogError(
+                    $"KeyCubeSpawner: '{completionScenePath}' 씬을 불러올 수 없습니다. " +
+                    "해당 씬이 Build Settings의 Scene List에 포함되어 있는지 확인하세요.",
+                    this);
+                return;
+            }
+
+            SceneManager.LoadSceneAsync(completionScenePath, LoadSceneMode.Single);
         }
 
         private static void CollectRuntimeEmissions(

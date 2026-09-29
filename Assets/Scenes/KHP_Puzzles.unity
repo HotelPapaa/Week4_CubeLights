@@ -14288,6 +14288,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  completionScene: {fileID: 102900000, guid: fc7020525092efc48b68c9e54f03e239, type: 3}
+  completionScenePath: Assets/Scenes/Ruins_KSW_End.unity
 --- !u!1001 &2147100532
 PrefabInstance:
   m_ObjectHideFlags: 0
