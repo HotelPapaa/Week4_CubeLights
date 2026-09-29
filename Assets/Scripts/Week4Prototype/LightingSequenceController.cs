@@ -27,6 +27,8 @@ namespace GameLab.Week4
         [SerializeField] private PrototypeGameManager gameManager;
         [Tooltip("마지막 레이저가 도착한 뒤 Stage Camera로 전환하기 전까지 유지할 시간")]
         [Min(0f)] [SerializeField] private float stageClearLaserHoldDuration = 0.5f;
+        [Tooltip("Stage Camera로 전환된 뒤 Main Camera로 돌아가기 전까지 유지할 시간")]
+        [Min(0f)] [SerializeField] private float stageCameraHoldDuration = 0.5f;
 
         [Header("시네머신 카메라들")]
         [SerializeField] public CinemachineCamera defaultCamera;
@@ -56,6 +58,10 @@ namespace GameLab.Week4
 
         public event Action<bool> LightStateChanged;
         public event Action LightEffectsResolved;
+
+        /// <summary>클리어 결과 확정부터 Main Camera 복귀까지 필요한 전체 연출 시간.</summary>
+        public float StageClearPresentationDuration =>
+            Mathf.Max(0f, stageClearLaserHoldDuration) + Mathf.Max(0f, stageCameraHoldDuration);
 
         public void Initialize(
             InputActionAsset actions,
@@ -334,12 +340,27 @@ namespace GameLab.Week4
                 yield return new WaitForSeconds(delay);
             }
 
-            stageClearTransitionCoroutine = null;
-            if (!isLightOn || gameManager == null || !gameManager.IsCurrentStageSolved) yield break;
+            if (!isLightOn || gameManager == null || !gameManager.IsCurrentStageSolved)
+            {
+                stageClearTransitionCoroutine = null;
+                yield break;
+            }
 
             // 마지막 전등 도착 장면을 잠시 유지한 뒤 레이저를 숨기고 결과 카메라로 전환한다.
             gameManager.SetLightVisualizationVisible(false);
             SetCameraState(showStage: true);
+
+            float cameraHoldDuration = Mathf.Max(0f, stageCameraHoldDuration);
+            if (cameraHoldDuration > 0f)
+            {
+                yield return new WaitForSeconds(cameraHoldDuration);
+            }
+
+            stageClearTransitionCoroutine = null;
+            if (!isLightOn || gameManager == null || !gameManager.IsCurrentStageSolved) yield break;
+
+            // Stage Camera 유지 시간이 끝나면 조작 화면으로 복귀한다.
+            ResetToPlayerView();
         }
 
         private void CancelStageClearTransition()

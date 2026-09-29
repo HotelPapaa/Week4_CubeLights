@@ -197,10 +197,15 @@ namespace GameLab.Week4
         private IEnumerator ReturnToMainCameraAndSpawn(int stageIndex, int slotIndex)
         {
             float delay = Mathf.Max(0f, spawnDelayAfterClear);
+            if (lightingController != null)
+            {
+                // KeyCube가 Stage Camera 연출 중 보이지 않는 곳에서 먼저 떨어지지 않도록 한다.
+                delay = Mathf.Max(delay, lightingController.StageClearPresentationDuration);
+            }
+
             if (delay > 0f) yield return new WaitForSeconds(delay);
 
             clearSequence = null;
-            lightingController?.ResetToPlayerView();
             ActivateSlot(stageIndex, slotIndex);
             SpawnKeyCube();
         }
