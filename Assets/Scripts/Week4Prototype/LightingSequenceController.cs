@@ -187,12 +187,6 @@ namespace GameLab.Week4
         {
             if (!context.performed) return;
 
-            // 블렌드 도중에도 마지막으로 선택한 시점을 기준으로 토글한다.
-            bool isStageView = defaultCamera != null
-                ? StageCIneCamera != null && currentCamera == StageCIneCamera
-                : stageCamera != null && stageCamera.enabled;
-            SetCameraState(showStage: !isStageView);
-
             if (isLightOn)
             {
                 TurnOffLight();
@@ -203,7 +197,7 @@ namespace GameLab.Week4
             SoundManager.Play(SoundEventId.LightOn);
             gameManager?.SetInteractionEnabled(false);
 
-            // 새 전등판과 논리 광선만 표시하고, 얼음의 용해와 낙하를 Stage Camera에서 관찰한다.
+            // 성공 판정 전에는 현재 플레이어 시점을 유지한 채 광선과 연쇄 반응을 관찰한다.
             gameManager?.SetLightVisualizationVisible(true);
             LightStateChanged?.Invoke(true);
             if (gameManager != null)
@@ -274,6 +268,7 @@ namespace GameLab.Week4
             isLightOn = false;
             SoundManager.Play(SoundEventId.LightOff);
             gameManager?.CancelLightEffects();
+            if (IsStageViewActive()) SetCameraState(showStage: false);
             gameManager?.ResetLightAttempt();
             gameManager?.SetInteractionEnabled(true);
             LightStateChanged?.Invoke(false);
@@ -299,7 +294,20 @@ namespace GameLab.Week4
         {
             if (!isLightOn) return;
 
+            // 얼음 용해와 낙하까지 반영된 최종 결과가 성공일 때만 전등판 카메라로 전환한다.
+            if (gameManager != null && gameManager.IsCurrentStageSolved)
+            {
+                SetCameraState(showStage: true);
+            }
+
             LightEffectsResolved?.Invoke();
+        }
+
+        private bool IsStageViewActive()
+        {
+            return defaultCamera != null
+                ? StageCIneCamera != null && currentCamera == StageCIneCamera
+                : stageCamera != null && stageCamera.enabled;
         }
 
         private void SetCameraState(bool showStage)
