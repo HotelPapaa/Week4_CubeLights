@@ -430,6 +430,15 @@ namespace GameLab.Week4
                 verticalLimit = Mathf.Max(verticalLimit, lamp.Target.gridPosition.y + 2);
             }
 
+            // 보드보다 높은 층에 놓인 Reserve 광학 큐브도 광선 탐색 범위에서 제외되지 않게 한다.
+            foreach (KeyValuePair<Vector3Int, DraggableCube> external in externalCubes)
+            {
+                if (external.Value != null && external.Value.gameObject.activeInHierarchy)
+                {
+                    verticalLimit = Mathf.Max(verticalLimit, external.Key.y + 2);
+                }
+            }
+
             List<LightEmitterRay> emitters = CollectEmitterRays();
             Dictionary<Vector3Int, SplitterInputState> splitterStates =
                 ResolveSplitterInputs(emitters, verticalLimit, result);

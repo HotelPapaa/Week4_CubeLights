@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameLab.Week4
@@ -130,12 +131,16 @@ namespace GameLab.Week4
             gameManager?.ConfigureStage(currentStage);
 
             EnsureRuntimeRoot();
+            ValidateReserveSlotAssignments(currentStage.CubeSpawns);
             foreach (StageCubeSpawn spawn in currentStage.CubeSpawns)
             {
                 if (spawn.prefab == null) continue;
 
                 Vector3 initialPosition = spawn.usesReserveSlot
-                    ? GetReserveSlotWorldPosition(spawn.reserveSide, spawn.reserveSlot)
+                    ? GetReserveSlotWorldPosition(
+                        spawn.reserveSide,
+                        spawn.reserveSlot,
+                        spawn.reserveLevel)
                     : spawnOrigin + spawn.localPosition;
                 Quaternion initialRotation = spawn.usesReserveSlot
                     ? board.transform.rotation * Quaternion.Euler(spawn.localEulerAngles)
@@ -176,7 +181,10 @@ namespace GameLab.Week4
         /// Player Camera에서 보이는 격자의 가상 바깥 한 칸을 Reserve 자리로 사용한다.
         /// Left/Right는 화면 좌우, Near/Far는 화면 아래/위 방향이다.
         /// </summary>
-        private Vector3 GetReserveSlotWorldPosition(CubeReserveSide side, int requestedSlot)
+        private Vector3 GetReserveSlotWorldPosition(
+            CubeReserveSide side,
+            int requestedSlot,
+            int requestedLevel)
         {
             GetPlayerViewAxes(out Vector3Int screenRight, out Vector3Int screenNear);
             Vector3Int edgeDirection = side switch
@@ -198,9 +206,36 @@ namespace GameLab.Week4
             float slotOffset = (slot - (slotCount - 1) * 0.5f) * board.CellSize;
             Vector3 localPosition = (Vector3)edgeDirection * edgeDistance +
                                     (Vector3)slotDirection * slotOffset;
-            float y = board.SurfaceY + board.CubeHeight * 0.5f;
+            // Inspector는 1층부터 세고, 논리 좌표는 0층부터 세므로 1을 뺀 뒤 기존 격자 높이식을 사용한다.
+            int levelIndex = Mathf.Max(1, requestedLevel) - 1;
+            float y = board.SurfaceY + board.CubeHeight * (levelIndex + 0.5f);
             localPosition.y = y;
             return board.transform.TransformPoint(localPosition);
+        }
+
+        /// <summary>실제로 같은 외부 3차원 좌표를 사용하는 Reserve 설정을 로드 전에 경고한다.</summary>
+        private void ValidateReserveSlotAssignments(IReadOnlyList<StageCubeSpawn> spawns)
+        {
+            if (spawns == null || board == null) return;
+
+            var occupiedPositions = new HashSet<Vector3Int>();
+            foreach (StageCubeSpawn spawn in spawns)
+            {
+                if (!spawn.usesReserveSlot || spawn.prefab == null) continue;
+
+                Vector3 worldPosition = GetReserveSlotWorldPosition(
+                    spawn.reserveSide,
+                    spawn.reserveSlot,
+                    spawn.reserveLevel);
+                Vector3Int gridPosition = board.WorldToGridCoordinate(worldPosition);
+                if (occupiedPositions.Add(gridPosition)) continue;
+
+                Debug.LogWarning(
+                    $"{currentStage.DisplayName}: Reserve {spawn.reserveSide} " +
+                    $"Slot {Mathf.Max(1, spawn.reserveSlot)}, Level {Mathf.Max(1, spawn.reserveLevel)}이 " +
+                    "다른 Reserve 큐브와 겹칩니다.",
+                    currentStage);
+            }
         }
 
         private void GetPlayerViewAxes(out Vector3Int screenRight, out Vector3Int screenNear)

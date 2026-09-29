@@ -36,6 +36,9 @@ namespace GameLab.Week4
         [Tooltip("1부터 시작합니다. Left/Right는 1~3, Near/Far는 1~5입니다.")]
         [Min(1)] public int reserveSlot;
 
+        [Tooltip("Reserve Slot의 수직 층입니다. 1부터 시작하며 기존 데이터의 0은 1층으로 처리됩니다.")]
+        [Min(1)] public int reserveLevel;
+
         // 보드 바깥에서 시작하는 경우
         public StageCubeSpawn(GameObject cubePrefab, Vector3 position, Vector3 eulerAngles)
         {
@@ -47,6 +50,7 @@ namespace GameLab.Week4
             usesReserveSlot = false;
             reserveSide = CubeReserveSide.Near;
             reserveSlot = 1;
+            reserveLevel = 1;
         }
 
         // 보드 위에서 시작하는 경우
@@ -60,6 +64,7 @@ namespace GameLab.Week4
             usesReserveSlot = false;
             reserveSide = CubeReserveSide.Near;
             reserveSlot = 1;
+            reserveLevel = 1;
         }
 
         // 그리드 외곽에 놓는 경우
@@ -77,6 +82,26 @@ namespace GameLab.Week4
             usesReserveSlot = true;
             reserveSide = side;
             reserveSlot = Mathf.Max(1, slot);
+            reserveLevel = 1;
+        }
+
+        // 그리드 외곽의 특정 슬롯과 층에 놓는 경우
+        public StageCubeSpawn(
+            GameObject cubePrefab,
+            CubeReserveSide side,
+            int slot,
+            int level,
+            Vector3 eulerAngles)
+        {
+            prefab = cubePrefab;
+            localPosition = Vector3.zero;
+            localEulerAngles = eulerAngles;
+            startsOnBoard = false;
+            boardCell = default;
+            usesReserveSlot = true;
+            reserveSide = side;
+            reserveSlot = Mathf.Max(1, slot);
+            reserveLevel = Mathf.Max(1, level);
         }
     }
 
