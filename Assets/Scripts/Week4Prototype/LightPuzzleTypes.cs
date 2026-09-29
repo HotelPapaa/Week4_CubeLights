@@ -53,12 +53,18 @@ namespace GameLab.Week4
         public readonly Vector3Int From;
         public readonly Vector3Int To;
         public readonly PuzzleLightColor Color;
+        public readonly int SequenceStep;
 
-        public LightBeamSegment(Vector3Int from, Vector3Int to, PuzzleLightColor color)
+        public LightBeamSegment(
+            Vector3Int from,
+            Vector3Int to,
+            PuzzleLightColor color,
+            int sequenceStep = 0)
         {
             From = from;
             To = to;
             Color = color;
+            SequenceStep = sequenceStep;
         }
     }
 

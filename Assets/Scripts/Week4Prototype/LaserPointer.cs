@@ -31,6 +31,14 @@ namespace GameLab.Week4
         private Func<LightBeamSegment, Vector3> resolveEndPosition;
         private SoundHandle laserSoundHandle;
 
+        private sealed class BeamAnimation
+        {
+            public Transform Transform;
+            public Vector3 BaseScale;
+            public float TargetScaleY;
+            public float Duration;
+        }
+
         public bool CanRender => board != null && laserRoot != null && laserPrefab != null;
 
         public void Configure(GridBoard targetBoard, Transform targetRoot, GameObject targetPrefab)
@@ -43,7 +51,10 @@ namespace GameLab.Week4
             }
         }
 
-        /// <summary>기존 광선을 지우고 계산된 구간을 순서대로 재생한다.</summary>
+        /// <summary>
+        /// 기존 광선을 지우고 모든 Emitter의 직선 구간을 동시에 재생한다.
+        /// 굴절기와 분배기를 통과해 생긴 다음 단계 광선만 앞 단계가 끝난 뒤 재생한다.
+        /// </summary>
         public void Play(
             IReadOnlyList<LightBeamSegment> route,
             Func<LightBeamSegment, Vector3> endPositionResolver = null)
@@ -126,15 +137,58 @@ namespace GameLab.Week4
 
         private IEnumerator ShootLaser(IReadOnlyList<LightBeamSegment> route)
         {
+            int maximumSequenceStep = 0;
             for (int index = 0; index < route.Count; index++)
             {
-                yield return AnimateSegment(route, index);
+                maximumSequenceStep = Mathf.Max(maximumSequenceStep, route[index].SequenceStep);
+            }
+
+            for (int sequenceStep = 0; sequenceStep <= maximumSequenceStep; sequenceStep++)
+            {
+                yield return AnimateSequenceStep(route, sequenceStep);
             }
 
             shootCoroutine = null;
         }
 
-        private IEnumerator AnimateSegment(IReadOnlyList<LightBeamSegment> route, int index)
+        private IEnumerator AnimateSequenceStep(IReadOnlyList<LightBeamSegment> route, int sequenceStep)
+        {
+            var animations = new List<BeamAnimation>();
+            for (int index = 0; index < route.Count; index++)
+            {
+                if (route[index].SequenceStep != sequenceStep) continue;
+
+                BeamAnimation animation = CreateSegmentAnimation(route, index);
+                if (animation != null)
+                {
+                    animations.Add(animation);
+                }
+            }
+
+            if (animations.Count == 0) yield break;
+
+            float elapsed = 0f;
+            bool isAnimating = true;
+            while (isAnimating)
+            {
+                elapsed += Time.deltaTime;
+                isAnimating = false;
+
+                foreach (BeamAnimation animation in animations)
+                {
+                    float progress = Mathf.Clamp01(elapsed / animation.Duration);
+                    animation.Transform.localScale = new Vector3(
+                        animation.BaseScale.x,
+                        animation.TargetScaleY * progress,
+                        animation.BaseScale.z);
+                    isAnimating |= progress < 1f;
+                }
+
+                if (isAnimating) yield return null;
+            }
+        }
+
+        private BeamAnimation CreateSegmentAnimation(IReadOnlyList<LightBeamSegment> route, int index)
         {
             LightBeamSegment segment = route[index];
             Vector3 startPosition = board.GridToWorld(segment.From);
@@ -164,7 +218,7 @@ namespace GameLab.Week4
 
             Vector3 displacement = endPosition - startPosition;
             float distance = displacement.magnitude;
-            if (distance <= Mathf.Epsilon) yield break;
+            if (distance <= Mathf.Epsilon) return null;
 
             PlayInteractionSound(segment);
 
@@ -186,20 +240,13 @@ namespace GameLab.Week4
             Color color = LightDirectionUtility.ToDisplayColor(segment.Color);
             ConfigureRenderers(laserObject, color);
 
-            float duration = distance / Mathf.Max(0.01f, growthSpeed);
-            float elapsed = 0f;
-            while (elapsed < duration)
+            return new BeamAnimation
             {
-                elapsed += Time.deltaTime;
-                float progress = Mathf.Clamp01(elapsed / duration);
-                laserTransform.localScale = new Vector3(
-                    baseScale.x,
-                    targetScaleY * progress,
-                    baseScale.z);
-                yield return null;
-            }
-
-            laserTransform.localScale = new Vector3(baseScale.x, targetScaleY, baseScale.z);
+                Transform = laserTransform,
+                BaseScale = baseScale,
+                TargetScaleY = targetScaleY,
+                Duration = distance / Mathf.Max(0.01f, growthSpeed)
+            };
         }
 
         /// <summary>광선 애니메이션이 해당 큐브에 도달한 순간 굴절·분기·색 변환음을 한 번만 재생한다.</summary>

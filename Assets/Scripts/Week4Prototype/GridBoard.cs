@@ -648,7 +648,8 @@ namespace GameLab.Week4
             Dictionary<Vector3Int, SplitterInputState> resolvedSplitterStates = null,
             Dictionary<Vector3Int, SplitterInputState> observedSplitterStates = null,
             HashSet<Vector3Int> emittedSplitters = null,
-            bool recordResult = true)
+            bool recordResult = true,
+            int sequenceStep = 0)
         {
             if (initialDirection == Vector3Int.zero) return;
 
@@ -672,7 +673,7 @@ namespace GameLab.Week4
                 Vector3Int next = position + direction;
                 if (recordResult)
                 {
-                    result.Segments.Add(new LightBeamSegment(position, next, color));
+                    result.Segments.Add(new LightBeamSegment(position, next, color, sequenceStep));
                 }
 
                 bool reachedLamp = false;
@@ -694,7 +695,7 @@ namespace GameLab.Week4
                     Vector3Int extendedEnd = next + direction * Mathf.Max(1, escapedBeamExtensionCells);
                     if (recordResult)
                     {
-                        result.Segments.Add(new LightBeamSegment(next, extendedEnd, color));
+                        result.Segments.Add(new LightBeamSegment(next, extendedEnd, color, sequenceStep));
                     }
                     return;
                 }
@@ -734,6 +735,7 @@ namespace GameLab.Week4
                 {
                     position = next;
                     direction = refractedDirection;
+                    sequenceStep++;
                     continue;
                 }
 
@@ -775,7 +777,8 @@ namespace GameLab.Week4
                             resolvedSplitterStates,
                             observedSplitterStates,
                             emittedSplitters,
-                            recordResult);
+                            recordResult,
+                            sequenceStep + 1);
                     }
 
                     if (outputCount >= 2)
@@ -791,7 +794,8 @@ namespace GameLab.Week4
                             resolvedSplitterStates,
                             observedSplitterStates,
                             emittedSplitters,
-                            recordResult);
+                            recordResult,
+                            sequenceStep + 1);
                     }
 
                     return;
