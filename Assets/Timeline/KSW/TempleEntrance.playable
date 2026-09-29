@@ -3806,11 +3806,11 @@ MonoBehaviour:
   - {fileID: -1112647019925835611}
   - {fileID: 4893740165815781029}
   - {fileID: 6023243705473802180}
-  m_FixedDuration: 39.833333333333336
+  m_FixedDuration: 0
   m_EditorSettings:
     m_Framerate: 30
     m_ScenePreview: 1
-  m_DurationMode: 1
+  m_DurationMode: 0
   m_MarkerTrack: {fileID: 0}
 --- !u!114 &2918107897766767
 MonoBehaviour:
