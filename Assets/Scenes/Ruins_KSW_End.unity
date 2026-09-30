@@ -86635,6 +86635,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1390981907}
   - component: {fileID: 1390981906}
+  - component: {fileID: 1390981908}
   m_Layer: 0
   m_Name: Ending Cutscene
   m_TagString: Untagged
@@ -86694,6 +86695,21 @@ PlayableDirector:
   m_ExposedReferences:
     m_References:
     - 40807febb12054d4791cf8523efbf524: {fileID: 204264086}
+--- !u!114 &1390981908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1390981905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 158f0e5a31c144dfbbdfb7a6741e3f0f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  playableDirector: {fileID: 1390981906}
+  fontAsset: {fileID: 11400000, guid: b34dcf9775566694e845295f3193967d, type: 2}
+  statisticsDisplayLeadTime: 4.5
 --- !u!4 &1390981907
 Transform:
   m_ObjectHideFlags: 0

@@ -433,6 +433,7 @@ namespace GameLab.Week4
             if (!completionEffectPlayed && completedStages.Count >= RequiredKeyCubeCount)
             {
                 completionEffectPlayed = true;
+                GameplayStatistics.CompleteRun();
                 completionEffectSequence = StartCoroutine(PlayAllKeyCubesCompletedEffect());
             }
 

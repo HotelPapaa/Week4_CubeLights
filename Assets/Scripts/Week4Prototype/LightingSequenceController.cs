@@ -260,11 +260,17 @@ namespace GameLab.Week4
             if (isLightOn)
             {
                 TurnOffLight(preserveLightAttemptState: true);
-                gameManager.RestoreLightAttemptState();
+                if (gameManager.RestoreLightAttemptState())
+                {
+                    GameplayStatistics.RecordUndo();
+                }
                 return;
             }
 
-            gameManager.UndoLastAction();
+            if (gameManager.UndoLastAction())
+            {
+                GameplayStatistics.RecordUndo();
+            }
         }
 
         private void RotateOrbitCamera(int direction)

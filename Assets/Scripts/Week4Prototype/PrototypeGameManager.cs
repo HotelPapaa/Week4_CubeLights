@@ -300,11 +300,12 @@ namespace GameLab.Week4
         /// <summary>유효한 회전 입력을 받은 프레임에 효과음과 회전 동작을 함께 시작한다.</summary>
         private void RotateHoveredCube(Vector3 axis, float degrees)
         {
-            if (hoveredCube == null) return;
+            if (hoveredCube == null || hoveredCube.InteractionLocked) return;
 
             BoardUndoSnapshot beforeRotation = CaptureBoardState();
             SoundManager.Play(SoundEventId.CubeRotate, hoveredCube.transform.position);
             hoveredCube.RotateBy(axis, degrees);
+            GameplayStatistics.RecordRotation();
             CommitUndoSnapshot(beforeRotation);
         }
 

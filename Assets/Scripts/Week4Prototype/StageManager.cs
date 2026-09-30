@@ -384,6 +384,7 @@ namespace GameLab.Week4
 
         public void RestartStage()
         {
+            GameplayStatistics.RecordRestart();
             loadingFromRestart = true;
             LoadStage(currentStageIndex);
             loadingFromRestart = false;
